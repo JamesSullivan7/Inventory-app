@@ -1,0 +1,35 @@
+/* ── CSS Custom Properties (Theming) ─────────────── */
+/* These are defaults — overridden at runtime by config.js */
+
+:root {
+  /* Core colors */
+  --bg: #141418;
+  --surface: #1e1e24;
+  --surface2: #28282e;
+  --border: #38383e;
+  --accent: #8a8aff;
+  --accent-dim: #6060c0;
+  --text: #e8e8f0;
+  --text-muted: #8a8a9a;
+
+  /* Status colors */
+  --danger: #e07070;
+  --danger-bg: #3a1f1f;
+  --warning: #e0b060;
+  --warning-bg: #3a2e1a;
+  --success: #7ec89a;
+  --success-bg: #1a3028;
+  --needs-made: #d4956a;
+  --needs-made-bg: #3a2218;
+
+  /* Typography */
+  --font-ui: 'Outfit', sans-serif;
+  --font-brand: 'Georgia', serif;
+
+  /* Transitions */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Shadows */
+  --shadow-card: 0 2px 16px -4px rgba(0,0,0,0.35);
+  --shadow-lift: 0 12px 40px -10px rgba(0,0,0,0.55), 0 0 0 1px var(--accent-dim);
+}

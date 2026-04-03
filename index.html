@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inventory Manager</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#141418" />
+
+  <link rel="stylesheet" href="/css/variables.css" />
+  <link rel="stylesheet" href="/css/base.css" />
+  <link rel="stylesheet" href="/css/layout.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <div id="brand-logo"></div>
+    <h1 id="brand-name">Inventory Manager<span id="brand-sub">Loading...</span></h1>
+  </div>
+  <div class="header-stats">
+    <div class="stat" id="stat-total">
+      <div class="stat-value">-</div>
+      <div class="stat-label">In Stock</div>
+    </div>
+    <div class="stat" id="stat-skus">
+      <div class="stat-value">-</div>
+      <div class="stat-label">Products</div>
+    </div>
+    <div class="stat needs" id="stat-needs">
+      <div class="stat-value">-</div>
+      <div class="stat-label">Needs Made</div>
+    </div>
+    <div class="stat danger" id="stat-low">
+      <div class="stat-value">-</div>
+      <div class="stat-label">Low Stock</div>
+    </div>
+    <div class="stat" id="stat-achieve" style="display:none">
+      <div class="stat-value">-</div>
+      <div class="stat-label">Milestones</div>
+    </div>
+    <div class="stat" id="stat-mat-low">
+      <div class="stat-value">-</div>
+      <div class="stat-label">Mat. Low</div>
+    </div>
+  </div>
+</header>
+
+<nav class="tabs">
+  <button class="tab" data-tab="dashboard">Dashboard</button>
+  <button class="tab active" data-tab="inventory">Inventory</button>
+  <button class="tab" data-tab="materials">Materials</button>
+  <button class="tab" data-tab="recipes">Recipes</button>
+  <button class="tab" data-tab="production">Production</button>
+  <button class="tab" data-tab="suppliers">Suppliers</button>
+  <button class="tab" data-tab="orders">Orders</button>
+  <button class="tab" data-tab="waste">Waste</button>
+  <button class="tab" data-tab="history">History</button>
+  <button class="tab" data-tab="settings">Settings</button>
+</nav>
+
+<div class="alerts" id="alerts"></div>
+
+<main>
+
+  <!-- Dashboard -->
+  <div class="page" id="page-dashboard">
+    <div class="settings-section">
+      <h3>Dashboard</h3>
+      <p style="color:var(--text-muted);">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Inventory -->
+  <div class="page active" id="page-inventory">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="needs-made">Needs Made</button>
+        <button class="filter-btn" data-filter="in-production">In Production</button>
+        <button class="filter-btn" data-filter="low-stock">Low Stock</button>
+        <input class="search-input" id="search-input" type="text" placeholder="Search..." />
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" data-action="export-csv">Export CSV</button>
+        <button class="btn-primary" data-action="add-product">+ Add</button>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <!-- Materials -->
+  <div class="page" id="page-materials">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" id="mat-search" type="text" placeholder="Search materials..." />
+      </div>
+      <button class="btn-primary" data-action="add-material">+ Add Material</button>
+    </div>
+    <div class="mat-grid" id="mat-grid"></div>
+  </div>
+
+  <!-- Recipes -->
+  <div class="page" id="page-recipes">
+    <div class="settings-section">
+      <p style="color:var(--text-muted);">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Production -->
+  <div class="page" id="page-production">
+    <div class="settings-section">
+      <p style="color:var(--text-muted);">Loading...</p>
+    </div>
+  </div>
+
+  <!-- Suppliers -->
+  <div class="page" id="page-suppliers"></div>
+
+  <!-- Orders -->
+  <div class="page" id="page-orders"></div>
+
+  <!-- Waste -->
+  <div class="page" id="page-waste"></div>
+
+  <!-- History -->
+  <div class="page" id="page-history">
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button class="filter-btn active" data-hfilter="all">All</button>
+        <button class="filter-btn" data-hfilter="restock">Restocked</button>
+        <button class="filter-btn" data-hfilter="sold">Sold / Used</button>
+        <button class="filter-btn" data-hfilter="produced">Production</button>
+      </div>
+      <button class="btn-secondary" data-action="clear-history" style="color:var(--danger);border-color:var(--danger)">Clear History</button>
+    </div>
+    <div class="history-table-wrap">
+      <table class="history-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Item / Event</th>
+            <th>Change</th>
+            <th>New Qty</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody id="history-body"></tbody>
+      </table>
+      <div class="history-empty" id="history-empty" style="display:none">No history yet. Changes to inventory will appear here.</div>
+    </div>
+  </div>
+
+  <!-- Settings -->
+  <div class="page" id="page-settings">
+    <div id="settings-content"></div>
+  </div>
+
+</main>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>
