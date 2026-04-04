@@ -1,6 +1,6 @@
 // ── Materials Store ───────────────────────────────────
 
-import * as db from '../db.js';
+import { apiList, apiCreate, apiUpdate, apiDelete } from '../api-client.js';
 import { getProfile } from '../config.js';
 
 let materials = [];
@@ -10,7 +10,7 @@ export function onMaterialsChange(fn) { changeListeners.push(fn); }
 function notify() { for (const fn of changeListeners) fn(materials); }
 
 export async function loadMaterials() {
-  materials = await db.getAll('materials');
+  materials = await apiList('materials');
   materials.sort((a, b) => a.name.localeCompare(b.name));
   return materials;
 }
@@ -57,25 +57,24 @@ export async function addMaterial(data) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  const id = await db.add('materials', record);
-  record.id = id;
-  materials.push(record);
+  const created = await apiCreate('materials', record);
+  materials.push(created);
   materials.sort((a, b) => a.name.localeCompare(b.name));
   notify();
-  return record;
+  return created;
 }
 
 export async function updateMaterial(id, updates) {
   const item = materials.find(m => m.id === id);
   if (!item) return null;
-  Object.assign(item, updates, { updatedAt: new Date().toISOString() });
-  await db.put('materials', item);
+  const updated = await apiUpdate('materials', id, { ...updates, updatedAt: new Date().toISOString() });
+  Object.assign(item, updated);
   notify();
   return item;
 }
 
 export async function deleteMaterial(id) {
-  await db.del('materials', id);
+  await apiDelete('materials', id);
   materials = materials.filter(m => m.id !== id);
   notify();
 }
@@ -84,9 +83,9 @@ export async function changeQuantity(id, delta) {
   const item = materials.find(m => m.id === id);
   if (!item) return null;
   const oldQty = item.quantity;
-  item.quantity = Math.max(0, Math.round((item.quantity + delta) * 1000) / 1000);
-  item.updatedAt = new Date().toISOString();
-  await db.put('materials', item);
+  const newQty = Math.max(0, Math.round((item.quantity + delta) * 1000) / 1000);
+  const updated = await apiUpdate('materials', id, { quantity: newQty, updatedAt: new Date().toISOString() });
+  Object.assign(item, updated);
   notify();
   return { item, oldQty, newQty: item.quantity, actualDelta: item.quantity - oldQty };
 }
@@ -95,9 +94,9 @@ export async function setQuantity(id, newQty) {
   const item = materials.find(m => m.id === id);
   if (!item) return null;
   const oldQty = item.quantity;
-  item.quantity = Math.max(0, Math.round(newQty * 1000) / 1000);
-  item.updatedAt = new Date().toISOString();
-  await db.put('materials', item);
+  const qty = Math.max(0, Math.round(newQty * 1000) / 1000);
+  const updated = await apiUpdate('materials', id, { quantity: qty, updatedAt: new Date().toISOString() });
+  Object.assign(item, updated);
   notify();
   return { item, oldQty, newQty: item.quantity, delta: item.quantity - oldQty };
 }

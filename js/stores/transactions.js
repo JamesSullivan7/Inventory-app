@@ -1,7 +1,7 @@
 // ── Transaction Log Store ─────────────────────────────
 // Manual income/expense tracking, designed for future Plaid auto-import.
 
-import * as db from '../db.js';
+import { apiList, apiCreate, apiUpdate, apiDelete, apiBatch } from '../api-client.js';
 
 let transactions = [];
 const changeListeners = [];
@@ -21,7 +21,7 @@ function notify() { for (const fn of changeListeners) fn(transactions); }
 function round2(n) { return Math.round(n * 100) / 100; }
 
 export async function loadTransactions() {
-  transactions = await db.getAll('transactions');
+  transactions = await apiList('transactions');
   transactions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   return transactions;
 }
@@ -47,24 +47,23 @@ export async function addTransaction(data) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  const id = await db.add('transactions', record);
-  record.id = id;
-  transactions.unshift(record); // newest first
+  const created = await apiCreate('transactions', record);
+  transactions.unshift(created); // newest first
   notify();
-  return record;
+  return created;
 }
 
 export async function updateTransaction(id, updates) {
   const item = transactions.find(t => t.id === id);
   if (!item) return null;
-  Object.assign(item, updates, { updatedAt: new Date().toISOString() });
-  await db.put('transactions', item);
+  const updated = await apiUpdate('transactions', id, { ...updates, updatedAt: new Date().toISOString() });
+  Object.assign(item, updated);
   notify();
   return item;
 }
 
 export async function deleteTransaction(id) {
-  await db.del('transactions', id);
+  await apiDelete('transactions', id);
   transactions = transactions.filter(t => t.id !== id);
   notify();
 }
@@ -158,11 +157,12 @@ export async function importPlaidTransactions(added = [], modified = [], removed
   let removedCount = 0;
 
   // Add new transactions (skip if externalId already exists)
+  const newRecords = [];
   for (const txn of added) {
     const existing = transactions.find(t => t.externalId === txn.externalId);
     if (existing) continue; // Already imported, skip
 
-    const record = {
+    newRecords.push({
       date: txn.date,
       description: txn.description || '',
       amount: txn.amount || 0,
@@ -175,11 +175,18 @@ export async function importPlaidTransactions(added = [], modified = [], removed
       metadata: txn.metadata || {},
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-    };
-    const id = await db.add('transactions', record);
-    record.id = id;
-    transactions.unshift(record);
-    addedCount++;
+    });
+  }
+
+  if (newRecords.length > 0) {
+    const created = await apiBatch('transactions', newRecords);
+    // apiBatch returns the created records array
+    if (Array.isArray(created)) {
+      for (const rec of created) {
+        transactions.unshift(rec);
+      }
+      addedCount = created.length;
+    }
   }
 
   // Update modified transactions (find by externalId)
@@ -187,7 +194,7 @@ export async function importPlaidTransactions(added = [], modified = [], removed
     const existing = transactions.find(t => t.externalId === txn.externalId);
     if (!existing) continue; // Not found, skip
 
-    Object.assign(existing, {
+    const updates = {
       date: txn.date,
       description: txn.description || existing.description,
       amount: txn.amount || existing.amount,
@@ -195,8 +202,9 @@ export async function importPlaidTransactions(added = [], modified = [], removed
       category: txn.category || existing.category,
       metadata: txn.metadata || existing.metadata,
       updatedAt: new Date().toISOString(),
-    });
-    await db.put('transactions', existing);
+    };
+    const updated = await apiUpdate('transactions', existing.id, updates);
+    Object.assign(existing, updated);
     modifiedCount++;
   }
 
@@ -204,7 +212,7 @@ export async function importPlaidTransactions(added = [], modified = [], removed
   for (const externalId of removed) {
     const existing = transactions.find(t => t.externalId === externalId);
     if (!existing) continue;
-    await db.del('transactions', existing.id);
+    await apiDelete('transactions', existing.id);
     transactions = transactions.filter(t => t.id !== existing.id);
     removedCount++;
   }

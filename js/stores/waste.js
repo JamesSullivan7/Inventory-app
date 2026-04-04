@@ -1,11 +1,11 @@
 // ── Waste / Shrinkage Store ──────────────────────────
 
-import * as db from '../db.js';
+import { apiList, apiCreate, apiDelete } from '../api-client.js';
 
 let wasteEntries = [];
 
 export async function loadWaste() {
-  wasteEntries = await db.getAll('waste');
+  wasteEntries = await apiList('waste');
   wasteEntries.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   return wasteEntries;
 }
@@ -24,14 +24,13 @@ export async function logWaste(data) {
     costImpact: data.costImpact || null,
     createdAt: new Date().toISOString(),
   };
-  const id = await db.add('waste', record);
-  record.id = id;
-  wasteEntries.unshift(record);
-  return record;
+  const created = await apiCreate('waste', record);
+  wasteEntries.unshift(created);
+  return created;
 }
 
 export async function deleteWasteEntry(id) {
-  await db.del('waste', id);
+  await apiDelete('waste', id);
   wasteEntries = wasteEntries.filter(w => w.id !== id);
 }
 

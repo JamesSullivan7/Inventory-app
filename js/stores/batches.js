@@ -1,11 +1,11 @@
 // ── Batches / Lot Tracking Store ─────────────────────
 
-import * as db from '../db.js';
+import { apiList, apiCreate, apiUpdate, apiDelete } from '../api-client.js';
 
 let batches = [];
 
 export async function loadBatches() {
-  batches = await db.getAll('batches');
+  batches = await apiList('batches');
   batches.sort((a, b) => new Date(b.receivedDate) - new Date(a.receivedDate));
   return batches;
 }
@@ -31,22 +31,21 @@ export async function addBatch(data) {
     notes: data.notes || '',
     createdAt: new Date().toISOString(),
   };
-  const id = await db.add('batches', record);
-  record.id = id;
-  batches.unshift(record);
-  return record;
+  const created = await apiCreate('batches', record);
+  batches.unshift(created);
+  return created;
 }
 
 export async function updateBatch(id, updates) {
   const item = batches.find(b => b.id === id);
   if (!item) return null;
-  Object.assign(item, updates);
-  await db.put('batches', item);
+  const updated = await apiUpdate('batches', id, updates);
+  Object.assign(item, updated);
   return item;
 }
 
 export async function deleteBatch(id) {
-  await db.del('batches', id);
+  await apiDelete('batches', id);
   batches = batches.filter(b => b.id !== id);
 }
 
@@ -62,9 +61,10 @@ export async function deductFIFO(materialId, qty) {
   for (const batch of matBatches) {
     if (remaining <= 0) break;
     const take = Math.min(remaining, batch.remainingQty);
-    batch.remainingQty = Math.round((batch.remainingQty - take) * 1000) / 1000;
+    const newRemainingQty = Math.round((batch.remainingQty - take) * 1000) / 1000;
     remaining = Math.round((remaining - take) * 1000) / 1000;
-    await db.put('batches', batch);
+    const updated = await apiUpdate('batches', batch.id, { remainingQty: newRemainingQty });
+    Object.assign(batch, updated);
     used.push({ batchId: batch.id, materialId, qtyUsed: take });
   }
 

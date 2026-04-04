@@ -1,11 +1,11 @@
 // ── Locations Store ──────────────────────────────────
 
-import * as db from '../db.js';
+import { apiList, apiCreate, apiUpdate, apiDelete } from '../api-client.js';
 
 let locations = [];
 
 export async function loadLocations() {
-  locations = await db.getAll('locations');
+  locations = await apiList('locations');
   locations.sort((a, b) => a.name.localeCompare(b.name));
   return locations;
 }
@@ -20,23 +20,22 @@ export async function addLocation(data) {
     isDefault: data.isDefault || locations.length === 0,
     createdAt: new Date().toISOString(),
   };
-  const id = await db.add('locations', record);
-  record.id = id;
-  locations.push(record);
+  const created = await apiCreate('locations', record);
+  locations.push(created);
   locations.sort((a, b) => a.name.localeCompare(b.name));
-  return record;
+  return created;
 }
 
 export async function updateLocation(id, updates) {
   const item = locations.find(l => l.id === id);
   if (!item) return null;
-  Object.assign(item, updates);
-  await db.put('locations', item);
+  const updated = await apiUpdate('locations', id, updates);
+  Object.assign(item, updated);
   return item;
 }
 
 export async function deleteLocation(id) {
-  await db.del('locations', id);
+  await apiDelete('locations', id);
   locations = locations.filter(l => l.id !== id);
 }
 

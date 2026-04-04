@@ -1,6 +1,6 @@
 // ── Products Store ────────────────────────────────────
 
-import * as db from '../db.js';
+import { apiList, apiCreate, apiUpdate, apiDelete } from '../api-client.js';
 import { getProfile } from '../config.js';
 
 let products = [];
@@ -10,7 +10,7 @@ export function onProductsChange(fn) { changeListeners.push(fn); }
 function notify() { for (const fn of changeListeners) fn(products); }
 
 export async function loadProducts() {
-  products = await db.getAll('products');
+  products = await apiList('products');
   products.sort((a, b) => a.name.localeCompare(b.name));
   return products;
 }
@@ -68,25 +68,24 @@ export async function addProduct(data) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  const id = await db.add('products', record);
-  record.id = id;
-  products.push(record);
+  const created = await apiCreate('products', record);
+  products.push(created);
   products.sort((a, b) => a.name.localeCompare(b.name));
   notify();
-  return record;
+  return created;
 }
 
 export async function updateProduct(id, updates) {
   const item = products.find(p => p.id === id);
   if (!item) return null;
-  Object.assign(item, updates, { updatedAt: new Date().toISOString() });
-  await db.put('products', item);
+  const updated = await apiUpdate('products', id, { ...updates, updatedAt: new Date().toISOString() });
+  Object.assign(item, updated);
   notify();
   return item;
 }
 
 export async function deleteProduct(id) {
-  await db.del('products', id);
+  await apiDelete('products', id);
   products = products.filter(p => p.id !== id);
   notify();
 }
@@ -95,9 +94,9 @@ export async function changeQuantity(id, delta) {
   const item = products.find(p => p.id === id);
   if (!item) return null;
   const oldQty = item.quantity;
-  item.quantity = Math.max(0, item.quantity + delta);
-  item.updatedAt = new Date().toISOString();
-  await db.put('products', item);
+  const newQty = Math.max(0, item.quantity + delta);
+  const updated = await apiUpdate('products', id, { quantity: newQty, updatedAt: new Date().toISOString() });
+  Object.assign(item, updated);
   notify();
   return { item, oldQty, newQty: item.quantity, actualDelta: item.quantity - oldQty };
 }

@@ -1,7 +1,7 @@
 // ── History Store ─────────────────────────────────────
 // Unified audit trail for all inventory changes.
 
-import * as db from '../db.js';
+import { apiList, apiCreate, apiDelete } from '../api-client.js';
 
 let historyCache = [];
 const MAX_ENTRIES = 1000;
@@ -11,7 +11,7 @@ export function onHistoryChange(fn) { changeListeners.push(fn); }
 function notify() { for (const fn of changeListeners) fn(historyCache); }
 
 export async function loadHistory() {
-  historyCache = await db.getAll('history');
+  historyCache = await apiList('history');
   historyCache.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   return historyCache;
 }
@@ -32,24 +32,26 @@ export async function addEntry(entry) {
     createdAt: new Date().toISOString(),
   };
 
-  const id = await db.add('history', record);
-  record.id = id;
-  historyCache.unshift(record);
+  const created = await apiCreate('history', record);
+  historyCache.unshift(created);
 
   // Trim old entries
   if (historyCache.length > MAX_ENTRIES) {
     const toRemove = historyCache.splice(MAX_ENTRIES);
     for (const old of toRemove) {
-      await db.del('history', old.id);
+      await apiDelete('history', old.id);
     }
   }
 
   notify();
-  return record;
+  return created;
 }
 
 export async function clearHistory() {
-  await db.clear('history');
+  // Delete all entries via API
+  for (const entry of historyCache) {
+    await apiDelete('history', entry.id);
+  }
   historyCache = [];
   notify();
 }

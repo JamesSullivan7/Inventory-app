@@ -1,17 +1,22 @@
 // ── Purchase Orders Store ────────────────────────────
 
-import * as db from '../db.js';
+import { apiList, apiCreate, apiUpdate, apiDelete, apiUpsert } from '../api-client.js';
 
 let orders = [];
 let nextPoNum = 1;
 
 export async function loadOrders() {
-  orders = await db.getAll('purchaseOrders');
+  orders = await apiList('orders');
   orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
-  // Determine next PO number
-  const setting = await db.getById('settings', 'nextPoNumber');
-  nextPoNum = setting?.value || orders.length + 1;
+  // Determine next PO number from settings
+  try {
+    const settings = await apiList('settings');
+    const setting = settings.find(s => s.key === 'nextPoNumber');
+    nextPoNum = setting?.value || orders.length + 1;
+  } catch {
+    nextPoNum = orders.length + 1;
+  }
 
   return orders;
 }
@@ -27,16 +32,16 @@ export function getActiveOrders() {
   return orders.filter(o => ['draft', 'pending-approval', 'sent', 'partially-received'].includes(o.status));
 }
 
-function generatePoNumber() {
+async function generatePoNumber() {
   const year = new Date().getFullYear();
   const num = String(nextPoNum++).padStart(4, '0');
-  db.put('settings', { key: 'nextPoNumber', value: nextPoNum });
+  await apiUpsert('settings', { key: 'nextPoNumber', value: nextPoNum });
   return `PO-${year}-${num}`;
 }
 
 export async function createOrder(data) {
   const record = {
-    poNumber: generatePoNumber(),
+    poNumber: await generatePoNumber(),
     supplierId: data.supplierId,
     status: data.status || 'draft',
     lineItems: data.lineItems || [],  // [{ materialId, quantity, unitCost, receivedQty: 0 }]
@@ -54,26 +59,27 @@ export async function createOrder(data) {
   record.totalCost = record.lineItems.reduce((sum, li) => sum + (li.quantity * (li.unitCost || 0)), 0);
   record.totalCost = Math.round(record.totalCost * 100) / 100;
 
-  const id = await db.add('purchaseOrders', record);
-  record.id = id;
-  orders.unshift(record);
-  return record;
+  const created = await apiCreate('orders', record);
+  orders.unshift(created);
+  return created;
 }
 
 export async function updateOrder(id, updates) {
   const item = orders.find(o => o.id === id);
   if (!item) return null;
-  Object.assign(item, updates, { updatedAt: new Date().toISOString() });
+  const payload = { ...updates, updatedAt: new Date().toISOString() };
   if (updates.lineItems) {
-    item.totalCost = item.lineItems.reduce((sum, li) => sum + (li.quantity * (li.unitCost || 0)), 0);
-    item.totalCost = Math.round(item.totalCost * 100) / 100;
+    const lineItems = updates.lineItems;
+    payload.totalCost = lineItems.reduce((sum, li) => sum + (li.quantity * (li.unitCost || 0)), 0);
+    payload.totalCost = Math.round(payload.totalCost * 100) / 100;
   }
-  await db.put('purchaseOrders', item);
+  const updated = await apiUpdate('orders', id, payload);
+  Object.assign(item, updated);
   return item;
 }
 
 export async function deleteOrder(id) {
-  await db.del('purchaseOrders', id);
+  await apiDelete('orders', id);
   orders = orders.filter(o => o.id !== id);
 }
 

@@ -1,7 +1,7 @@
 // ── Business Expenses Store ───────────────────────────
 // Tracks overhead / fixed costs and variable costs.
 
-import * as db from '../db.js';
+import { apiList, apiCreate, apiUpdate, apiDelete } from '../api-client.js';
 
 let expenses = [];
 const changeListeners = [];
@@ -23,7 +23,7 @@ function notify() { for (const fn of changeListeners) fn(expenses); }
 function round2(n) { return Math.round(n * 100) / 100; }
 
 export async function loadExpenses() {
-  expenses = await db.getAll('expenses');
+  expenses = await apiList('expenses');
   expenses.sort((a, b) => a.name.localeCompare(b.name));
   return expenses;
 }
@@ -48,25 +48,24 @@ export async function addExpense(data) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  const id = await db.add('expenses', record);
-  record.id = id;
-  expenses.push(record);
+  const created = await apiCreate('expenses', record);
+  expenses.push(created);
   expenses.sort((a, b) => a.name.localeCompare(b.name));
   notify();
-  return record;
+  return created;
 }
 
 export async function updateExpense(id, updates) {
   const item = expenses.find(e => e.id === id);
   if (!item) return null;
-  Object.assign(item, updates, { updatedAt: new Date().toISOString() });
-  await db.put('expenses', item);
+  const updated = await apiUpdate('expenses', id, { ...updates, updatedAt: new Date().toISOString() });
+  Object.assign(item, updated);
   notify();
   return item;
 }
 
 export async function deleteExpense(id) {
-  await db.del('expenses', id);
+  await apiDelete('expenses', id);
   expenses = expenses.filter(e => e.id !== id);
   notify();
 }

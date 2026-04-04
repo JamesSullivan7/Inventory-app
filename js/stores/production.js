@@ -1,7 +1,7 @@
 // ── Production Store ─────────────────────────────────
 // Production runs and achievement/milestone tracking.
 
-import * as db from '../db.js';
+import { apiList, apiCreate, apiUpsert } from '../api-client.js';
 import { getProfile } from '../config.js';
 
 let runs = [];
@@ -12,14 +12,19 @@ export function onProductionChange(fn) { changeListeners.push(fn); }
 function notify() { for (const fn of changeListeners) fn({ runs, totalProduced }); }
 
 export async function loadProduction() {
-  runs = await db.getAll('productionRuns');
+  runs = await apiList('production');
   runs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   totalProduced = runs.reduce((sum, r) => sum + r.quantity, 0);
 
   // Check settings for a manual total override
-  const setting = await db.getById('settings', 'totalProduced');
-  if (setting && setting.value > totalProduced) {
-    totalProduced = setting.value;
+  try {
+    const settings = await apiList('settings');
+    const setting = settings.find(s => s.key === 'totalProduced');
+    if (setting && setting.value > totalProduced) {
+      totalProduced = setting.value;
+    }
+  } catch {
+    // Settings not available, use calculated total
   }
 
   return { runs, totalProduced };
@@ -37,18 +42,17 @@ export async function logRun(data) {
     note: data.note || '',
     createdAt: new Date().toISOString(),
   };
-  const id = await db.add('productionRuns', record);
-  record.id = id;
-  runs.unshift(record);
-  totalProduced += record.quantity;
-  await db.put('settings', { key: 'totalProduced', value: totalProduced });
+  const created = await apiCreate('production', record);
+  runs.unshift(created);
+  totalProduced += created.quantity;
+  await apiUpsert('settings', { key: 'totalProduced', value: totalProduced });
   notify();
-  return record;
+  return created;
 }
 
 export async function setTotalProduced(val) {
   totalProduced = Math.max(0, val);
-  await db.put('settings', { key: 'totalProduced', value: totalProduced });
+  await apiUpsert('settings', { key: 'totalProduced', value: totalProduced });
   notify();
 }
 

@@ -1,6 +1,6 @@
 // ── Recipes / Bill of Materials Store ─────────────────
 
-import * as db from '../db.js';
+import { apiList, apiCreate, apiUpdate, apiDelete } from '../api-client.js';
 
 let recipes = [];
 const changeListeners = [];
@@ -9,7 +9,7 @@ export function onRecipesChange(fn) { changeListeners.push(fn); }
 function notify() { for (const fn of changeListeners) fn(recipes); }
 
 export async function loadRecipes() {
-  recipes = await db.getAll('recipes');
+  recipes = await apiList('recipes');
   recipes.sort((a, b) => a.name.localeCompare(b.name));
   return recipes;
 }
@@ -34,25 +34,24 @@ export async function addRecipe(data) {
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
-  const id = await db.add('recipes', record);
-  record.id = id;
-  recipes.push(record);
+  const created = await apiCreate('recipes', record);
+  recipes.push(created);
   recipes.sort((a, b) => a.name.localeCompare(b.name));
   notify();
-  return record;
+  return created;
 }
 
 export async function updateRecipe(id, updates) {
   const item = recipes.find(r => r.id === id);
   if (!item) return null;
-  Object.assign(item, updates, { updatedAt: new Date().toISOString() });
-  await db.put('recipes', item);
+  const updated = await apiUpdate('recipes', id, { ...updates, updatedAt: new Date().toISOString() });
+  Object.assign(item, updated);
   notify();
   return item;
 }
 
 export async function deleteRecipe(id) {
-  await db.del('recipes', id);
+  await apiDelete('recipes', id);
   recipes = recipes.filter(r => r.id !== id);
   notify();
 }
