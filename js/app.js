@@ -28,6 +28,10 @@ import { renderTransactionsPage, getTransactionFormFields, setPlaidAccounts, set
 import { openPlaidLink, getLinkedAccounts, syncTransactions, syncAllAccounts, removeAccount } from './services/plaid.js';
 import { connectQuickBooks, disconnectQuickBooks, getQBStatus, syncProducts as qbSyncProducts, syncSuppliers as qbSyncSuppliers, syncExpenses as qbSyncExpenses, fetchPLReport } from './services/quickbooks.js';
 import { renderQuickBooksSection } from './ui/quickbooks.js';
+import {
+  initSupabase, getSession, signUp, signIn, signOut,
+  getBusinessProfile, getCachedBusiness, isAuthenticated,
+} from './supabase.js';
 
 // ── State ────────────────────────────────────────────
 
@@ -39,12 +43,43 @@ let historyFilter = 'all';
 // ── Init ─────────────────────────────────────────────
 
 async function init() {
+  // Initialize Supabase auth
+  initSupabase();
+
+  // Check for existing session
+  const session = await getSession();
+
+  if (!session) {
+    // No session — show login page
+    showLoginPage();
+    return;
+  }
+
+  // Session exists — load the app
+  await loadApp();
+}
+
+async function loadApp() {
+  // Hide login overlay if visible
+  const loginOverlay = document.getElementById('login-overlay');
+  if (loginOverlay) loginOverlay.remove();
+
   await db.openDB();
 
-  // Load profile
+  // Load profile from Supabase (or fall back to local config)
+  const bizProfile = await getBusinessProfile();
   const profile = await config.loadProfile();
 
-  // Check if we need setup wizard
+  // If no local profile but we have a Supabase business, apply it
+  if (!config.hasProfile() && bizProfile) {
+    await config.initFromPreset(bizProfile.type || 'general', bizProfile.name);
+    await config.saveProfile({
+      name: bizProfile.name,
+      type: bizProfile.type,
+    });
+  }
+
+  // Check if we need setup wizard (first time on this device)
   if (!config.hasProfile()) {
     showSetupWizard();
     return;
@@ -79,6 +114,153 @@ async function init() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   }
+}
+
+// ── Login / Signup Page ─────────────────────────────
+
+function showLoginPage() {
+  // Remove any existing overlay
+  document.getElementById('login-overlay')?.remove();
+
+  const overlay = document.createElement('div');
+  overlay.id = 'login-overlay';
+  overlay.className = 'login-overlay';
+
+  overlay.innerHTML = `
+    <div class="login-card">
+      <h1 class="login-brand">Inventory Manager</h1>
+      <p class="login-subtitle">Business management made simple</p>
+
+      <div id="login-form">
+        <div class="login-form-group">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="you@business.com" />
+        </div>
+        <div class="login-form-group">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="Your password" />
+        </div>
+        <div id="login-error" class="login-error" style="display:none"></div>
+        <button class="login-btn login-btn-primary" id="btn-login">Log In</button>
+        <p class="login-switch">Don't have an account? <a href="#" id="show-signup">Sign Up</a></p>
+      </div>
+
+      <div id="signup-form" style="display:none">
+        <div class="login-form-group">
+          <label>Business Name</label>
+          <input type="text" id="signup-biz-name" placeholder="e.g. Stone & Wick Co." />
+        </div>
+        <div class="login-form-group">
+          <label>Email</label>
+          <input type="email" id="signup-email" placeholder="you@business.com" />
+        </div>
+        <div class="login-form-group">
+          <label>Password</label>
+          <input type="password" id="signup-password" placeholder="Min 6 characters" />
+        </div>
+        <div class="login-form-group">
+          <label>Business Type</label>
+          <select id="signup-biz-type">
+            <option value="general">General</option>
+            <option value="candles">Candles</option>
+            <option value="bakery">Bakery</option>
+            <option value="retail">Retail</option>
+            <option value="crafts">Crafts</option>
+          </select>
+        </div>
+        <div id="signup-error" class="login-error" style="display:none"></div>
+        <button class="login-btn login-btn-primary" id="btn-signup">Create Account</button>
+        <p class="login-switch">Already have an account? <a href="#" id="show-login">Log In</a></p>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(overlay);
+
+  // Toggle between login and signup
+  document.getElementById('show-signup')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('login-form').style.display = 'none';
+    document.getElementById('signup-form').style.display = 'block';
+  });
+
+  document.getElementById('show-login')?.addEventListener('click', (e) => {
+    e.preventDefault();
+    document.getElementById('signup-form').style.display = 'none';
+    document.getElementById('login-form').style.display = 'block';
+  });
+
+  // Login handler
+  document.getElementById('btn-login')?.addEventListener('click', async () => {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errorEl = document.getElementById('login-error');
+
+    if (!email || !password) {
+      errorEl.textContent = 'Please enter email and password';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    try {
+      errorEl.style.display = 'none';
+      document.getElementById('btn-login').textContent = 'Logging in...';
+      document.getElementById('btn-login').disabled = true;
+
+      await signIn(email, password);
+      await loadApp();
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = 'block';
+      document.getElementById('btn-login').textContent = 'Log In';
+      document.getElementById('btn-login').disabled = false;
+    }
+  });
+
+  // Signup handler
+  document.getElementById('btn-signup')?.addEventListener('click', async () => {
+    const bizName = document.getElementById('signup-biz-name').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const bizType = document.getElementById('signup-biz-type').value;
+    const errorEl = document.getElementById('signup-error');
+
+    if (!bizName || !email || !password) {
+      errorEl.textContent = 'Please fill in all fields';
+      errorEl.style.display = 'block';
+      return;
+    }
+    if (password.length < 6) {
+      errorEl.textContent = 'Password must be at least 6 characters';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    try {
+      errorEl.style.display = 'none';
+      document.getElementById('btn-signup').textContent = 'Creating account...';
+      document.getElementById('btn-signup').disabled = true;
+
+      await signUp(email, password, bizName, bizType);
+      await loadApp();
+    } catch (err) {
+      errorEl.textContent = err.message;
+      errorEl.style.display = 'block';
+      document.getElementById('btn-signup').textContent = 'Create Account';
+      document.getElementById('btn-signup').disabled = false;
+    }
+  });
+
+  // Enter key handlers
+  document.getElementById('login-password')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-login')?.click();
+  });
+  document.getElementById('signup-password')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') document.getElementById('btn-signup')?.click();
+  });
+
+  // Focus first input
+  setTimeout(() => document.getElementById('login-email')?.focus(), 100);
 }
 
 // ── Render All ───────────────────────────────────────
@@ -882,6 +1064,12 @@ function showSetupWizard() {
 // ── Event Listeners ──────────────────────────────────
 
 function setupEventListeners() {
+  // Logout button
+  document.getElementById('btn-logout')?.addEventListener('click', async () => {
+    await signOut();
+    location.reload();
+  });
+
   // Sidebar toggle (mobile)
   const sidebarToggle = document.getElementById('sidebar-toggle');
   const sidebar = document.getElementById('sidebar');
