@@ -882,6 +882,21 @@ function showSetupWizard() {
 // ── Event Listeners ──────────────────────────────────
 
 function setupEventListeners() {
+  // Sidebar toggle (mobile)
+  const sidebarToggle = document.getElementById('sidebar-toggle');
+  const sidebar = document.getElementById('sidebar');
+  const sidebarOverlay = document.getElementById('sidebar-overlay');
+  if (sidebarToggle && sidebar) {
+    sidebarToggle.addEventListener('click', () => {
+      sidebar.classList.toggle('open');
+      sidebarOverlay?.classList.toggle('open');
+    });
+    sidebarOverlay?.addEventListener('click', () => {
+      sidebar.classList.remove('open');
+      sidebarOverlay.classList.remove('open');
+    });
+  }
+
   // Delegated click handlers on main
   document.querySelector('main')?.addEventListener('click', handleMainClick);
   document.querySelector('main')?.addEventListener('change', handleMainChange);

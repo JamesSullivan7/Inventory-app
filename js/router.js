@@ -38,6 +38,10 @@ function handleHashChange() {
     p.classList.toggle('active', p.id === 'page-' + page);
   });
 
+  // Close mobile sidebar on navigate
+  document.getElementById('sidebar')?.classList.remove('open');
+  document.getElementById('sidebar-overlay')?.classList.remove('open');
+
   // Notify listeners
   for (const fn of listeners) fn(page);
 }
