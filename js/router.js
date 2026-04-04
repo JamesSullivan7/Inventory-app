@@ -6,7 +6,7 @@ let currentPage = 'dashboard';
 const PAGES = [
   'dashboard', 'inventory', 'materials', 'recipes',
   'production', 'suppliers', 'orders', 'batches',
-  'waste', 'history', 'expenses', 'costs', 'transactions', 'settings',
+  'waste', 'history', 'expenses', 'costs', 'transactions', 'pricing', 'settings',
 ];
 
 export function getCurrentPage() {

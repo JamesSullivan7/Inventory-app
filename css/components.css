@@ -970,3 +970,136 @@ input[type=checkbox].sw-toggle { width: 17px; height: 17px; accent-color: var(--
   border-top: 1px solid var(--border);
   padding-top: 16px;
 }
+
+/* ── Pricing Page ── */
+
+.pricing-header {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.pricing-header h2 {
+  font-size: 1.6rem;
+  color: var(--text);
+  margin: 0 0 8px 0;
+}
+.pricing-header p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.pricing-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: border-color 0.2s;
+}
+.pricing-card:hover { border-color: var(--accent-dim); }
+
+.pricing-popular {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.pricing-current {
+  border-color: var(--success);
+}
+
+.pricing-badge {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--accent);
+  color: var(--bg);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 12px;
+  border-radius: 10px;
+  letter-spacing: 0.06em;
+}
+
+.pricing-plan-name {
+  font-size: 1.1rem;
+  color: var(--text);
+  margin: 0 0 8px 0;
+}
+
+.pricing-price {
+  margin-bottom: 20px;
+}
+.pricing-amount {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.pricing-period {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.pricing-features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px 0;
+  flex: 1;
+}
+.pricing-features li {
+  padding: 6px 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+.pricing-features li:last-child { border-bottom: none; }
+
+.pricing-cta {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pricing-cta-upgrade {
+  background: var(--accent);
+  color: var(--bg);
+}
+.pricing-cta-upgrade:hover { opacity: 0.9; }
+.pricing-cta-current {
+  background: var(--surface2);
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.pricing-manage {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+.pricing-manage button { margin-top: 8px; }
+
+/* ── Billing Badge ── */
+.billing-section { margin-bottom: 16px; }
+.billing-tier-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+.tier-free { background: var(--surface2); color: var(--text-muted); }
+.tier-pro { background: rgba(138,138,255,0.15); color: var(--accent); }
+.tier-business { background: rgba(80,200,120,0.15); color: var(--success); }

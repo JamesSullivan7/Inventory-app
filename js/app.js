@@ -32,6 +32,7 @@ import {
   initSupabase, getSession, signUp, signIn, signOut,
   getBusinessProfile, getCachedBusiness, isAuthenticated,
 } from './supabase.js';
+import { renderPricingPage, renderBillingSection, createCheckoutSession, openBillingPortal, getSubscriptionStatus } from './ui/pricing.js';
 
 // ── State ────────────────────────────────────────────
 
@@ -297,6 +298,7 @@ function handlePageChange(page) {
       try { renderTransactionsPage(); } catch (e) { console.error('Transactions re-render error:', e); }
     }).catch(e => console.warn('Plaid accounts fetch failed:', e));
   }
+  else if (page === 'pricing') renderPricingPageWrapper();
   else if (page === 'settings') renderSettingsPage();
 }
 
@@ -848,6 +850,8 @@ function renderSettingsPage() {
       <button class="btn-primary" id="btn-save-thresholds" style="margin-top:12px;">Save Thresholds</button>
     </div>
 
+    <div id="billing-section-container"></div>
+
     <div id="qb-section-container"></div>
 
     <div class="settings-section">
@@ -859,6 +863,9 @@ function renderSettingsPage() {
       </div>
     </div>
   `;
+
+  // Load billing section
+  loadBillingSection();
 
   // Load QuickBooks status and render section
   loadQBSection();
@@ -1490,6 +1497,29 @@ async function handleMainClick(e) {
     }
 
     // ── QuickBooks Actions ──
+    // ── Billing Actions ──
+    case 'subscribe': {
+      const tier = btn.dataset.tier;
+      if (!tier || tier === 'free') break;
+      try {
+        toast('Redirecting to checkout...', 'info');
+        await createCheckoutSession(tier);
+      } catch (err) {
+        toast(err.message, 'error');
+      }
+      break;
+    }
+
+    case 'billing-portal': {
+      try {
+        toast('Opening billing portal...', 'info');
+        await openBillingPortal();
+      } catch (err) {
+        toast(err.message, 'error');
+      }
+      break;
+    }
+
     case 'qb-connect':
       connectQuickBooks();
       break;
@@ -1558,6 +1588,34 @@ async function handleMainClick(e) {
 
 let _qbStatus = null;
 let _qbReport = null;
+
+// ── Pricing Page ────────────────────────────────────
+
+async function renderPricingPageWrapper() {
+  const el = document.getElementById('page-pricing');
+  if (!el) return;
+  try {
+    const sub = await getSubscriptionStatus();
+    el.innerHTML = renderPricingPage(sub.tier, sub.status);
+  } catch (e) {
+    el.innerHTML = renderPricingPage('free', 'active');
+  }
+}
+
+// ── Billing Section ─────────────────────────────────
+
+async function loadBillingSection() {
+  const container = document.getElementById('billing-section-container');
+  if (!container) return;
+  try {
+    const sub = await getSubscriptionStatus();
+    container.innerHTML = renderBillingSection(sub.tier, sub.status);
+  } catch (e) {
+    container.innerHTML = renderBillingSection('free', 'active');
+  }
+}
+
+// ── QuickBooks Section ──────────────────────────────
 
 async function loadQBSection() {
   const container = document.getElementById('qb-section-container');
