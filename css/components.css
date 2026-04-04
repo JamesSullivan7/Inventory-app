@@ -780,3 +780,119 @@ input[type=checkbox].sw-toggle { width: 17px; height: 17px; accent-color: var(--
 
 .txn-type-badge.txn-income { background: rgba(80, 200, 120, 0.12); color: var(--success); }
 .txn-type-badge.txn-expense { background: rgba(224, 112, 112, 0.12); color: var(--danger); }
+
+/* ── Plaid Connected Accounts ── */
+
+.plaid-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.plaid-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.plaid-empty {
+  text-align: center;
+  padding: 20px;
+  color: var(--text-muted);
+}
+
+.plaid-empty p:first-child { font-size: 0.9rem; }
+
+.plaid-accounts-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.plaid-institution-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.plaid-inst-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.plaid-inst-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.plaid-inst-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.plaid-inst-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.plaid-account-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.plaid-account-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 10px;
+  background: var(--surface);
+  border-radius: 6px;
+  font-size: 0.82rem;
+}
+
+.plaid-acct-name {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.plaid-acct-mask {
+  color: var(--text-muted);
+  margin-left: 6px;
+  font-size: 0.75rem;
+}
+
+.plaid-acct-type {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: capitalize;
+}
+
+.plaid-acct-balance {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.85rem;
+}
+
+.plaid-account-error {
+  border: 1px solid var(--danger);
+}
+
+.plaid-acct-error {
+  color: var(--danger);
+  font-size: 0.72rem;
+}
+
+.plaid-sync-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}

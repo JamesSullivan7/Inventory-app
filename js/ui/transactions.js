@@ -6,6 +6,14 @@ import {
   getAllTransactions, getSummaryForPeriod, filterTransactions,
   INCOME_CATEGORIES, EXPENSE_CATEGORIES,
 } from '../stores/transactions.js';
+import { renderPlaidSection } from './plaid.js';
+
+// Plaid accounts cache (populated by app.js)
+let _plaidAccounts = [];
+let _plaidSyncing = false;
+
+export function setPlaidAccounts(accounts) { _plaidAccounts = accounts; }
+export function setPlaidSyncing(syncing) { _plaidSyncing = syncing; }
 
 // ── Transactions Page ───────────────────────────────
 
@@ -31,6 +39,8 @@ export function renderTransactionsPage() {
         <button class="btn-primary" data-action="add-income">+ Income</button>
       </div>
     </div>
+
+    ${renderPlaidSection(_plaidAccounts, _plaidSyncing)}
 
     <div class="cost-summary-row">
       <div class="cost-summary-card profit-positive">

@@ -143,3 +143,75 @@ export function getSummaryForPeriod(startDate, endDate) {
     count: txns.length,
   };
 }
+
+// ── Plaid Bulk Import ───────────────────────────────
+
+/**
+ * Import transactions from Plaid sync.
+ * Handles added, modified, and removed transactions.
+ * Deduplicates by externalId.
+ * Returns { addedCount, modifiedCount, removedCount }
+ */
+export async function importPlaidTransactions(added = [], modified = [], removed = []) {
+  let addedCount = 0;
+  let modifiedCount = 0;
+  let removedCount = 0;
+
+  // Add new transactions (skip if externalId already exists)
+  for (const txn of added) {
+    const existing = transactions.find(t => t.externalId === txn.externalId);
+    if (existing) continue; // Already imported, skip
+
+    const record = {
+      date: txn.date,
+      description: txn.description || '',
+      amount: txn.amount || 0,
+      type: txn.type || 'expense',
+      category: txn.category || 'other',
+      productId: txn.productId || null,
+      note: txn.note || '',
+      source: 'plaid',
+      externalId: txn.externalId,
+      metadata: txn.metadata || {},
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const id = await db.add('transactions', record);
+    record.id = id;
+    transactions.unshift(record);
+    addedCount++;
+  }
+
+  // Update modified transactions (find by externalId)
+  for (const txn of modified) {
+    const existing = transactions.find(t => t.externalId === txn.externalId);
+    if (!existing) continue; // Not found, skip
+
+    Object.assign(existing, {
+      date: txn.date,
+      description: txn.description || existing.description,
+      amount: txn.amount || existing.amount,
+      type: txn.type || existing.type,
+      category: txn.category || existing.category,
+      metadata: txn.metadata || existing.metadata,
+      updatedAt: new Date().toISOString(),
+    });
+    await db.put('transactions', existing);
+    modifiedCount++;
+  }
+
+  // Remove deleted transactions (by externalId)
+  for (const externalId of removed) {
+    const existing = transactions.find(t => t.externalId === externalId);
+    if (!existing) continue;
+    await db.del('transactions', existing.id);
+    transactions = transactions.filter(t => t.id !== existing.id);
+    removedCount++;
+  }
+
+  // Re-sort after bulk changes
+  transactions.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  notify();
+
+  return { addedCount, modifiedCount, removedCount };
+}

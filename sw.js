@@ -1,6 +1,6 @@
 // ── Service Worker — Cache-First Offline PWA ─────────
 
-const CACHE_NAME = 'inv-platform-v2';
+const CACHE_NAME = 'inv-platform-v3';
 const ASSETS = [
   '/',
   '/index.html',
@@ -19,6 +19,7 @@ const ASSETS = [
   '/js/stores/expenses.js',
   '/js/stores/transactions.js',
   '/js/services/cost-analysis.js',
+  '/js/services/plaid.js',
   '/js/ui/header.js',
   '/js/ui/alerts.js',
   '/js/ui/cards.js',
@@ -28,6 +29,7 @@ const ASSETS = [
   '/js/ui/toast.js',
   '/js/ui/cost-analysis.js',
   '/js/ui/transactions.js',
+  '/js/ui/plaid.js',
   '/manifest.json',
 ];
 
@@ -49,11 +51,17 @@ self.addEventListener('activate', e => {
   self.clients.claim();
 });
 
-// Fetch: cache-first for local assets, network-first for CDN
+// Fetch: network-first for API, cache-first for assets, network-first for CDN
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // Network-first for external CDN resources
+  // NEVER cache API routes — always go to network
+  if (url.pathname.startsWith('/api/')) {
+    e.respondWith(fetch(e.request));
+    return;
+  }
+
+  // Network-first for external CDN resources (Plaid Link SDK, fonts, etc.)
   if (url.origin !== self.location.origin) {
     e.respondWith(
       fetch(e.request)

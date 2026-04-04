@@ -24,7 +24,8 @@ import { detectReorderNeeded, generatePurchaseOrders, formatPOEmail } from './se
 import * as expenses from './stores/expenses.js';
 import * as transactions from './stores/transactions.js';
 import { renderExpensesPage, renderCostAnalysisPage, renderProductDetailBreakdown, getExpenseFormFields, registerStores } from './ui/cost-analysis.js';
-import { renderTransactionsPage, getTransactionFormFields } from './ui/transactions.js';
+import { renderTransactionsPage, getTransactionFormFields, setPlaidAccounts, setPlaidSyncing } from './ui/transactions.js';
+import { openPlaidLink, getLinkedAccounts, syncTransactions, syncAllAccounts, removeAccount } from './services/plaid.js';
 
 // ── State ────────────────────────────────────────────
 
@@ -101,7 +102,10 @@ function handlePageChange(page) {
   else if (page === 'waste') renderWastePage();
   else if (page === 'expenses') renderExpensesPage();
   else if (page === 'costs') renderCostAnalysisPage();
-  else if (page === 'transactions') renderTransactionsPage();
+  else if (page === 'transactions') {
+    refreshPlaidAccounts().then(() => renderTransactionsPage());
+    renderTransactionsPage(); // render immediately, then re-render after accounts load
+  }
   else if (page === 'settings') renderSettingsPage();
 }
 
@@ -1199,6 +1203,86 @@ async function handleMainClick(e) {
       toast('Transaction removed', 'info');
       break;
     }
+
+    // ── Plaid Actions ──
+    case 'plaid-connect': {
+      try {
+        toast('Opening bank connection...', 'info');
+        const result = await openPlaidLink();
+        if (result) {
+          toast(`Connected to ${result.institution_name}`, 'success');
+          await refreshPlaidAccounts();
+          renderTransactionsPage();
+        }
+      } catch (err) {
+        toast(`Connection failed: ${err.message}`, 'error');
+      }
+      break;
+    }
+
+    case 'plaid-sync': {
+      const itemId = btn.dataset.itemId;
+      if (!itemId) break;
+      try {
+        setPlaidSyncing(true);
+        renderTransactionsPage();
+        toast('Syncing transactions...', 'info');
+        const result = await syncTransactions(itemId);
+        setPlaidSyncing(false);
+        await refreshPlaidAccounts();
+        renderTransactionsPage();
+        toast(`Imported ${result.addedCount} new, ${result.modifiedCount} updated, ${result.removedCount} removed`, 'success');
+      } catch (err) {
+        setPlaidSyncing(false);
+        renderTransactionsPage();
+        toast(`Sync failed: ${err.message}`, 'error');
+      }
+      break;
+    }
+
+    case 'plaid-sync-all': {
+      try {
+        setPlaidSyncing(true);
+        renderTransactionsPage();
+        toast('Syncing all accounts...', 'info');
+        const result = await syncAllAccounts();
+        setPlaidSyncing(false);
+        await refreshPlaidAccounts();
+        renderTransactionsPage();
+        toast(`Imported ${result.addedCount} new, ${result.modifiedCount} updated, ${result.removedCount} removed`, 'success');
+      } catch (err) {
+        setPlaidSyncing(false);
+        renderTransactionsPage();
+        toast(`Sync failed: ${err.message}`, 'error');
+      }
+      break;
+    }
+
+    case 'plaid-remove': {
+      const itemId = btn.dataset.itemId;
+      if (!itemId || !confirm('Unlink this bank account? Imported transactions will remain.')) break;
+      try {
+        await removeAccount(itemId);
+        await refreshPlaidAccounts();
+        renderTransactionsPage();
+        toast('Account unlinked', 'info');
+      } catch (err) {
+        toast(`Failed to unlink: ${err.message}`, 'error');
+      }
+      break;
+    }
+  }
+}
+
+// ── Plaid Account Refresh ───────────────────────────
+
+async function refreshPlaidAccounts() {
+  try {
+    const { accounts } = await getLinkedAccounts();
+    setPlaidAccounts(accounts);
+  } catch (err) {
+    console.warn('Failed to fetch Plaid accounts:', err.message);
+    setPlaidAccounts([]);
   }
 }
 
