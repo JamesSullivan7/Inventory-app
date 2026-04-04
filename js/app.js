@@ -21,6 +21,8 @@ import { showFormModal, escHtml } from './ui/modals.js';
 import { toast } from './ui/toast.js';
 import { getProductForecasts, getMaterialForecasts } from './services/forecasting.js';
 import { detectReorderNeeded, generatePurchaseOrders, formatPOEmail } from './services/auto-order.js';
+import * as expenses from './stores/expenses.js';
+import { renderExpensesPage, renderCostAnalysisPage, renderProductDetailBreakdown, getExpenseFormFields, registerStores } from './ui/cost-analysis.js';
 
 // ── State ────────────────────────────────────────────
 
@@ -55,7 +57,11 @@ async function init() {
     batches.loadBatches(),
     waste.loadWaste(),
     locations.loadLocations(),
+    expenses.loadExpenses(),
   ]);
+
+  // Register stores for cost analysis UI
+  registerStores({ getAllProducts: products.getAllProducts });
 
   // Init router and render
   initRouter();
@@ -90,6 +96,8 @@ function handlePageChange(page) {
   else if (page === 'suppliers') renderSuppliersPage();
   else if (page === 'orders') renderOrdersPage();
   else if (page === 'waste') renderWastePage();
+  else if (page === 'expenses') renderExpensesPage();
+  else if (page === 'costs') renderCostAnalysisPage();
   else if (page === 'settings') renderSettingsPage();
 }
 
@@ -1140,6 +1148,35 @@ async function handleMainClick(e) {
       renderHistoryPage();
       toast('History cleared', 'info');
       break;
+
+    // ── Expense Actions ──
+    case 'add-expense':
+      showAddExpenseModal();
+      break;
+
+    case 'edit-expense':
+      showEditExpenseModal(id);
+      break;
+
+    case 'delete-expense': {
+      const exp = expenses.getExpenseById(id);
+      if (!exp || !confirm(`Remove expense "${exp.name}"?`)) return;
+      await expenses.deleteExpense(id);
+      renderExpensesPage();
+      toast(`${exp.name} removed`, 'info');
+      break;
+    }
+
+    // ── Cost Analysis Actions ──
+    case 'show-product-breakdown':
+      renderProductDetailBreakdown(id);
+      break;
+
+    case 'close-product-breakdown': {
+      const detailEl = document.getElementById('product-detail-breakdown');
+      if (detailEl) detailEl.innerHTML = '';
+      break;
+    }
   }
 }
 
@@ -1175,6 +1212,7 @@ function showAddProductModal() {
       { id: 'add-p-name', label: `${config.label('Product')} Name`, type: 'text', placeholder: 'e.g. Widget A', required: true },
       { id: 'add-p-qty', label: 'Starting Quantity', type: 'number', placeholder: '0', min: 0 },
       { id: 'add-p-note', label: 'Note (optional)', type: 'text', placeholder: 'e.g. seasonal, bestseller' },
+      { id: 'add-p-sell', label: 'Sell Price ($)', type: 'number', placeholder: '0.00', min: 0, step: '0.01' },
       { id: 'add-p-status', label: 'Status', type: 'select', value: 'none', options: [
         { value: 'none', label: 'In Stock' },
         { value: 'needs', label: 'Needs to be Made' },
@@ -1186,10 +1224,12 @@ function showAddProductModal() {
       const name = vals['add-p-name'];
       if (!name) return false;
       const qty = vals['add-p-qty'] || 0;
+      const sellPrice = parseFloat(vals['add-p-sell']) || null;
       const item = await products.addProduct({
         name,
         quantity: qty,
         note: vals['add-p-note'],
+        sellPrice,
         needsMade: vals['add-p-status'] === 'needs',
         inProduction: vals['add-p-status'] === 'production',
       });
@@ -1638,6 +1678,50 @@ function showLogWasteModal() {
       renderAll();
       renderWastePage();
       toast(`${qty} ${itemName} logged as waste`, 'info');
+    },
+  });
+}
+
+// ── Expense Modals ──────────────────────────────────
+
+function showAddExpenseModal() {
+  showFormModal({
+    title: 'Add Business Expense',
+    fields: getExpenseFormFields(),
+    submitLabel: 'Add Expense',
+    async onSubmit(vals) {
+      const name = vals.name;
+      if (!name) return false;
+      await expenses.addExpense({
+        name,
+        category: vals.category,
+        amount: parseFloat(vals.amount) || 0,
+        frequency: vals.frequency,
+        note: vals.note,
+      });
+      renderExpensesPage();
+      toast(`${name} added`, 'success');
+    },
+  });
+}
+
+function showEditExpenseModal(id) {
+  const exp = expenses.getExpenseById(id);
+  if (!exp) return;
+  showFormModal({
+    title: `Edit — ${exp.name}`,
+    fields: getExpenseFormFields(exp),
+    submitLabel: 'Save Changes',
+    async onSubmit(vals) {
+      await expenses.updateExpense(id, {
+        name: vals.name,
+        category: vals.category,
+        amount: parseFloat(vals.amount) || 0,
+        frequency: vals.frequency,
+        note: vals.note,
+      });
+      renderExpensesPage();
+      toast(`${exp.name} updated`, 'success');
     },
   });
 }

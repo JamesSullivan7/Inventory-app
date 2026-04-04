@@ -2,7 +2,7 @@
 // All database operations go through this module.
 
 const DB_NAME = 'inventory_platform';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 
 let dbInstance = null;
 
@@ -21,6 +21,7 @@ const STORES = {
   photos:          { keyPath: 'id', autoIncrement: true },
   dailySnapshots:  { keyPath: 'id', autoIncrement: true },
   settings:        { keyPath: 'key' },
+  expenses:        { keyPath: 'id', autoIncrement: true },
 };
 
 const INDEXES = {
@@ -70,6 +71,9 @@ const INDEXES = {
   ],
   dailySnapshots: [
     { name: 'date', keyPath: 'date', unique: true },
+  ],
+  expenses: [
+    { name: 'category', keyPath: 'category' },
   ],
 };
 

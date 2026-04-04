@@ -362,4 +362,334 @@ input[type=checkbox].sw-toggle { width: 17px; height: 17px; accent-color: var(--
 
   .settings-section { padding: 16px; }
   .threshold-row { gap: 8px; font-size: 0.85rem; }
+
+  .cost-summary-row { grid-template-columns: 1fr 1fr; }
+  .cost-info-bar { flex-direction: column; gap: 4px; }
+  .cost-table-wrap { overflow-x: auto; }
+  .cost-table { font-size: 0.75rem; }
+  .cost-stack { max-width: 100%; }
+  .overhead-row { flex-wrap: wrap; }
+}
+
+/* ── Cost Analysis & Expenses ─────────────────────── */
+
+.cost-summary-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.cost-summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  transition: border-color 0.2s var(--ease);
+}
+
+.cost-summary-card:hover {
+  border-color: var(--accent-dim);
+}
+
+.cost-summary-card.accent {
+  border-color: var(--accent);
+  background: rgba(138, 138, 255, 0.06);
+}
+
+.cost-summary-card.profit-positive {
+  border-color: var(--success);
+  background: rgba(80, 200, 120, 0.06);
+}
+
+.cost-summary-card.profit-negative {
+  border-color: var(--danger);
+  background: rgba(224, 112, 112, 0.06);
+}
+
+.cost-summary-value {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: -0.5px;
+}
+
+.cost-summary-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-top: 4px;
+}
+
+/* ── Cost Info Bar ── */
+
+.cost-info-bar {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+/* ── Cost Warning ── */
+
+.cost-warning {
+  padding: 10px 14px;
+  background: rgba(255, 200, 50, 0.08);
+  border: 1px solid var(--warning);
+  border-radius: 8px;
+  font-size: 0.8rem;
+  color: var(--warning);
+  margin-bottom: 12px;
+}
+
+/* ── Cost Table ── */
+
+.cost-table-wrap {
+  overflow-x: auto;
+  margin: 0 -4px;
+}
+
+.cost-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+}
+
+.cost-table th {
+  text-align: left;
+  padding: 8px 10px;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.cost-table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.cost-product-row {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cost-product-row:hover {
+  background: var(--surface2);
+}
+
+.cost-product-name {
+  font-weight: 500;
+  color: var(--text);
+}
+
+.cost-missing {
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.profit-pos { color: var(--success); font-weight: 500; }
+.profit-neg { color: var(--danger); font-weight: 500; }
+
+.cost-total-row td {
+  border-top: 2px solid var(--border);
+  padding-top: 10px;
+}
+
+.cost-detail-table {
+  max-width: 560px;
+}
+
+/* ── Cost Stack (per-product summary) ── */
+
+.cost-stack {
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cost-stack-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.cost-stack-total {
+  font-weight: 600;
+  color: var(--text);
+  border-bottom: 2px solid var(--border);
+}
+
+.cost-stack-profit {
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-bottom: none;
+}
+
+.cost-stack-profit.profit-positive { color: var(--success); }
+.cost-stack-profit.profit-negative { color: var(--danger); }
+
+/* ── Overhead Breakdown ── */
+
+.overhead-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.overhead-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.82rem;
+}
+
+.overhead-bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--surface2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.overhead-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 4px;
+  transition: width 0.3s var(--ease);
+}
+
+.overhead-amount {
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  min-width: 80px;
+  text-align: right;
+}
+
+.overhead-pct {
+  color: var(--text-muted);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ── Expense Category Sections ── */
+
+.expense-category-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  margin-bottom: 12px;
+  transition: border-color 0.2s var(--ease);
+}
+
+.expense-category-section:hover {
+  border-color: var(--accent-dim);
+}
+
+.expense-category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.expense-cat-badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--surface2);
+  color: var(--text-muted);
+}
+
+.cat-rent { background: rgba(138, 138, 255, 0.12); color: var(--accent); }
+.cat-insurance { background: rgba(80, 200, 120, 0.12); color: var(--success); }
+.cat-utilities { background: rgba(255, 200, 50, 0.12); color: var(--warning); }
+.cat-labor { background: rgba(224, 112, 112, 0.12); color: var(--danger); }
+.cat-equipment { background: rgba(138, 138, 255, 0.12); color: var(--accent); }
+.cat-marketing { background: rgba(180, 120, 255, 0.12); color: #b478ff; }
+.cat-packaging { background: rgba(100, 180, 255, 0.12); color: #64b4ff; }
+.cat-subscription { background: rgba(255, 160, 100, 0.12); color: #ffa064; }
+.cat-other { background: var(--surface2); color: var(--text-muted); }
+
+.expense-cat-total {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.expense-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.expense-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid transparent;
+  transition: border-color 0.15s;
+}
+
+.expense-item:hover {
+  border-color: var(--border);
+}
+
+.expense-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.expense-item-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.expense-item-detail {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.expense-monthly-eq {
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.expense-item-note {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 2px;
+}
+
+.expense-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 12px;
 }
