@@ -87,6 +87,22 @@ export function showFormModal({ title, fields, onSubmit, submitLabel = 'Save', i
 
   document.body.appendChild(overlay);
 
+  // Conditional field visibility (dependsOn)
+  for (const f of fields) {
+    if (f.dependsOn) {
+      const controlEl = document.getElementById(f.dependsOn.field);
+      const groupEl = document.getElementById(f.id)?.closest('.form-group');
+      if (controlEl && groupEl) {
+        const toggle = () => {
+          const show = f.dependsOn.values.includes(controlEl.value);
+          groupEl.style.display = show ? '' : 'none';
+        };
+        controlEl.addEventListener('change', toggle);
+        toggle(); // set initial state
+      }
+    }
+  }
+
   // Focus first input
   const firstInput = overlay.querySelector('input, textarea, select');
   if (firstInput) setTimeout(() => firstInput.focus(), 50);

@@ -22,7 +22,9 @@ import { toast } from './ui/toast.js';
 import { getProductForecasts, getMaterialForecasts } from './services/forecasting.js';
 import { detectReorderNeeded, generatePurchaseOrders, formatPOEmail } from './services/auto-order.js';
 import * as expenses from './stores/expenses.js';
+import * as transactions from './stores/transactions.js';
 import { renderExpensesPage, renderCostAnalysisPage, renderProductDetailBreakdown, getExpenseFormFields, registerStores } from './ui/cost-analysis.js';
+import { renderTransactionsPage, getTransactionFormFields } from './ui/transactions.js';
 
 // ── State ────────────────────────────────────────────
 
@@ -58,6 +60,7 @@ async function init() {
     waste.loadWaste(),
     locations.loadLocations(),
     expenses.loadExpenses(),
+    transactions.loadTransactions(),
   ]);
 
   // Register stores for cost analysis UI
@@ -98,6 +101,7 @@ function handlePageChange(page) {
   else if (page === 'waste') renderWastePage();
   else if (page === 'expenses') renderExpensesPage();
   else if (page === 'costs') renderCostAnalysisPage();
+  else if (page === 'transactions') renderTransactionsPage();
   else if (page === 'settings') renderSettingsPage();
 }
 
@@ -1177,6 +1181,24 @@ async function handleMainClick(e) {
       if (detailEl) detailEl.innerHTML = '';
       break;
     }
+
+    // ── Transaction Actions ──
+    case 'add-income':
+      showAddTransactionModal('income');
+      break;
+
+    case 'add-expense-txn':
+      showAddTransactionModal('expense');
+      break;
+
+    case 'delete-transaction': {
+      const txn = transactions.getTransactionById(id);
+      if (!txn || !confirm(`Remove transaction "${txn.description}"?`)) return;
+      await transactions.deleteTransaction(id);
+      renderTransactionsPage();
+      toast('Transaction removed', 'info');
+      break;
+    }
   }
 }
 
@@ -1695,8 +1717,12 @@ function showAddExpenseModal() {
       await expenses.addExpense({
         name,
         category: vals.category,
+        costType: vals.costType || 'fixed',
         amount: parseFloat(vals.amount) || 0,
         frequency: vals.frequency,
+        variableBasis: vals.variableBasis || null,
+        variableRate: parseFloat(vals.variableRate) || 0,
+        linkedProductId: vals.linkedProductId || null,
         note: vals.note,
       });
       renderExpensesPage();
@@ -1716,12 +1742,39 @@ function showEditExpenseModal(id) {
       await expenses.updateExpense(id, {
         name: vals.name,
         category: vals.category,
+        costType: vals.costType || 'fixed',
         amount: parseFloat(vals.amount) || 0,
         frequency: vals.frequency,
+        variableBasis: vals.variableBasis || null,
+        variableRate: parseFloat(vals.variableRate) || 0,
+        linkedProductId: vals.linkedProductId || null,
         note: vals.note,
       });
       renderExpensesPage();
       toast(`${exp.name} updated`, 'success');
+    },
+  });
+}
+
+function showAddTransactionModal(type) {
+  showFormModal({
+    title: type === 'income' ? 'Log Income' : 'Log Expense',
+    fields: getTransactionFormFields(type),
+    submitLabel: 'Save',
+    async onSubmit(vals) {
+      if (!vals.description) return false;
+      await transactions.addTransaction({
+        date: vals.date,
+        description: vals.description,
+        amount: parseFloat(vals.amount) || 0,
+        type,
+        category: vals.category,
+        productId: vals.productId ? parseInt(vals.productId) : null,
+        note: vals.note,
+        source: 'manual',
+      });
+      renderTransactionsPage();
+      toast(`${type === 'income' ? 'Income' : 'Expense'} logged`, 'success');
     },
   });
 }

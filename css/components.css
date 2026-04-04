@@ -693,3 +693,90 @@ input[type=checkbox].sw-toggle { width: 17px; height: 17px; accent-color: var(--
   gap: 6px;
   margin-left: 12px;
 }
+
+/* ── Cost Type Badges ── */
+
+.cost-type-badge {
+  font-size: 0.6rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+
+.type-fixed { background: rgba(138, 138, 255, 0.12); color: var(--accent); }
+.type-variable { background: rgba(255, 160, 100, 0.12); color: #ffa064; }
+.type-semi-variable { background: rgba(180, 120, 255, 0.12); color: #b478ff; }
+
+.cat-shipping { background: rgba(100, 180, 255, 0.12); color: #64b4ff; }
+.cat-commission { background: rgba(255, 120, 180, 0.12); color: #ff78b4; }
+
+/* ── P&L Statement ── */
+
+.pl-statement {
+  max-width: 500px;
+}
+
+.pl-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 0.88rem;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+
+.pl-indent {
+  padding-left: 16px;
+  color: var(--text-muted);
+  font-size: 0.82rem;
+}
+
+.pl-subtotal {
+  font-weight: 500;
+  border-bottom: 2px solid var(--border);
+}
+
+.pl-gross {
+  font-weight: 600;
+  font-size: 0.92rem;
+  padding: 10px 0;
+}
+
+.pl-net {
+  font-weight: 700;
+  font-size: 1rem;
+  border-bottom: none;
+  padding: 10px 0;
+}
+
+.pl-negative { color: var(--danger); }
+.pl-positive-val { color: var(--success); }
+.pl-negative-val { color: var(--danger); }
+
+/* ── Transaction Table ── */
+
+.txn-table tr { transition: background 0.15s; }
+.txn-table tr:hover { background: var(--surface2); }
+
+.txn-date { white-space: nowrap; font-size: 0.78rem; color: var(--text-muted); }
+.txn-desc { font-weight: 500; }
+.txn-note { font-size: 0.72rem; color: var(--text-muted); font-style: italic; }
+.txn-source { font-size: 0.72rem; color: var(--text-muted); text-transform: capitalize; }
+
+.txn-income-amount { color: var(--success); font-weight: 600; }
+.txn-expense-amount { color: var(--danger); font-weight: 600; }
+
+.txn-type-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.txn-type-badge.txn-income { background: rgba(80, 200, 120, 0.12); color: var(--success); }
+.txn-type-badge.txn-expense { background: rgba(224, 112, 112, 0.12); color: var(--danger); }

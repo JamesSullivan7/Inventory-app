@@ -2,7 +2,7 @@
 // All database operations go through this module.
 
 const DB_NAME = 'inventory_platform';
-const DB_VERSION = 2;
+const DB_VERSION = 3;
 
 let dbInstance = null;
 
@@ -22,6 +22,7 @@ const STORES = {
   dailySnapshots:  { keyPath: 'id', autoIncrement: true },
   settings:        { keyPath: 'key' },
   expenses:        { keyPath: 'id', autoIncrement: true },
+  transactions:    { keyPath: 'id', autoIncrement: true },
 };
 
 const INDEXES = {
@@ -74,6 +75,14 @@ const INDEXES = {
   ],
   expenses: [
     { name: 'category', keyPath: 'category' },
+    { name: 'costType', keyPath: 'costType' },
+  ],
+  transactions: [
+    { name: 'date',      keyPath: 'date' },
+    { name: 'type',      keyPath: 'type' },
+    { name: 'category',  keyPath: 'category' },
+    { name: 'productId', keyPath: 'productId' },
+    { name: 'source',    keyPath: 'source' },
   ],
 };
 
@@ -85,7 +94,9 @@ export function openDB() {
 
     req.onupgradeneeded = (e) => {
       const db = e.target.result;
+      const tx = e.target.transaction;
 
+      // Create any missing stores
       for (const [name, opts] of Object.entries(STORES)) {
         if (!db.objectStoreNames.contains(name)) {
           const store = db.createObjectStore(name, opts);
@@ -94,6 +105,14 @@ export function openDB() {
               store.createIndex(idx.name, idx.keyPath, { unique: !!idx.unique });
             }
           }
+        }
+      }
+
+      // Version 2 → 3: add costType index to existing expenses store
+      if (e.oldVersion < 3 && db.objectStoreNames.contains('expenses')) {
+        const expStore = tx.objectStore('expenses');
+        if (!expStore.indexNames.contains('costType')) {
+          expStore.createIndex('costType', 'costType');
         }
       }
     };
