@@ -26,6 +26,8 @@ import * as transactions from './stores/transactions.js';
 import { renderExpensesPage, renderCostAnalysisPage, renderProductDetailBreakdown, getExpenseFormFields, registerStores } from './ui/cost-analysis.js';
 import { renderTransactionsPage, getTransactionFormFields, setPlaidAccounts, setPlaidSyncing } from './ui/transactions.js';
 import { openPlaidLink, getLinkedAccounts, syncTransactions, syncAllAccounts, removeAccount } from './services/plaid.js';
+import { connectQuickBooks, disconnectQuickBooks, getQBStatus, syncProducts as qbSyncProducts, syncSuppliers as qbSyncSuppliers, syncExpenses as qbSyncExpenses, fetchPLReport } from './services/quickbooks.js';
+import { renderQuickBooksSection } from './ui/quickbooks.js';
 
 // ── State ────────────────────────────────────────────
 
@@ -657,6 +659,8 @@ function renderSettingsPage() {
       <button class="btn-primary" id="btn-save-thresholds" style="margin-top:12px;">Save Thresholds</button>
     </div>
 
+    <div id="qb-section-container"></div>
+
     <div class="settings-section">
       <h3>Data Management</h3>
       <div style="display:flex;gap:10px;flex-wrap:wrap;">
@@ -666,6 +670,9 @@ function renderSettingsPage() {
       </div>
     </div>
   `;
+
+  // Load QuickBooks status and render section
+  loadQBSection();
 
   // Live theme preview on color change
   el.querySelectorAll('input[type="color"]').forEach(input => {
@@ -1271,7 +1278,88 @@ async function handleMainClick(e) {
       }
       break;
     }
+
+    // ── QuickBooks Actions ──
+    case 'qb-connect':
+      connectQuickBooks();
+      break;
+
+    case 'qb-disconnect':
+      if (!confirm('Disconnect from QuickBooks? Your local data will not be affected.')) break;
+      try {
+        await disconnectQuickBooks();
+        toast('Disconnected from QuickBooks', 'info');
+        await loadQBSection();
+      } catch (err) {
+        toast(`Failed to disconnect: ${err.message}`, 'error');
+      }
+      break;
+
+    case 'qb-sync-products':
+      try {
+        toast('Syncing products to QuickBooks...', 'info');
+        const prodResult = await qbSyncProducts();
+        toast(`Products: ${prodResult.created} created, ${prodResult.updated} updated${prodResult.errors.length ? `, ${prodResult.errors.length} errors` : ''}`, 'success');
+        await loadQBSection();
+      } catch (err) {
+        toast(`Sync failed: ${err.message}`, 'error');
+      }
+      break;
+
+    case 'qb-sync-suppliers':
+      try {
+        toast('Syncing suppliers to QuickBooks...', 'info');
+        const supResult = await qbSyncSuppliers();
+        toast(`Suppliers: ${supResult.created} created, ${supResult.updated} updated${supResult.errors.length ? `, ${supResult.errors.length} errors` : ''}`, 'success');
+        await loadQBSection();
+      } catch (err) {
+        toast(`Sync failed: ${err.message}`, 'error');
+      }
+      break;
+
+    case 'qb-sync-expenses':
+      try {
+        toast('Syncing expenses to QuickBooks...', 'info');
+        const expResult = await qbSyncExpenses();
+        toast(`Expenses: ${expResult.created} created${expResult.errors.length ? `, ${expResult.errors.length} errors` : ''}`, 'success');
+        await loadQBSection();
+      } catch (err) {
+        toast(`Sync failed: ${err.message}`, 'error');
+      }
+      break;
+
+    case 'qb-fetch-report':
+      try {
+        toast('Fetching P&L report...', 'info');
+        _qbReport = await fetchPLReport();
+        const container = document.getElementById('qb-section-container');
+        if (container) container.innerHTML = renderQuickBooksSection(_qbStatus, _qbReport);
+        toast('P&L report loaded', 'success');
+      } catch (err) {
+        toast(`Failed to fetch report: ${err.message}`, 'error');
+      }
+      break;
   }
+}
+
+// ── Plaid Account Refresh ───────────────────────────
+
+// ── QuickBooks Section ──────────────────────────────
+
+let _qbStatus = null;
+let _qbReport = null;
+
+async function loadQBSection() {
+  const container = document.getElementById('qb-section-container');
+  if (!container) return;
+
+  try {
+    _qbStatus = await getQBStatus();
+  } catch (e) {
+    _qbStatus = null;
+  }
+
+  container.innerHTML = renderQuickBooksSection(_qbStatus, _qbReport);
 }
 
 // ── Plaid Account Refresh ───────────────────────────

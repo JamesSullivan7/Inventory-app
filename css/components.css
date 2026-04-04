@@ -896,3 +896,77 @@ input[type=checkbox].sw-toggle { width: 17px; height: 17px; accent-color: var(--
   opacity: 0.6;
   cursor: wait;
 }
+
+/* ── QuickBooks Section ── */
+
+.qb-section {
+  border-color: var(--border);
+}
+
+.qb-status-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border-radius: 20px;
+}
+
+.qb-connected {
+  background: rgba(80, 200, 120, 0.12);
+  color: var(--success);
+}
+
+.qb-disconnected {
+  background: var(--surface2);
+  color: var(--text-muted);
+}
+
+.qb-company-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.qb-company-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+.qb-sync-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+}
+
+.qb-sync-card {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.qb-sync-title {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.qb-sync-meta {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+
+.qb-report {
+  border-top: 1px solid var(--border);
+  padding-top: 16px;
+}
