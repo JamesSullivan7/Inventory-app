@@ -1153,9 +1153,24 @@ function renderWastePage() {
   let html = `
     <div class="toolbar">
       <div class="toolbar-left">
-        <span style="color:var(--text-muted);font-size:0.85rem;">${stats.count} waste entries · ${stats.totalQty} units total${stats.totalCost > 0 ? ` · $${stats.totalCost.toFixed(2)} impact` : ''}</span>
+        <h3 style="margin:0;font-size:1.1rem;">Waste Tracking</h3>
       </div>
       <button class="btn-primary" data-action="log-waste">+ Log Waste</button>
+    </div>
+
+    <div class="cost-summary-row">
+      <div class="cost-summary-card">
+        <div class="cost-summary-value">${stats.count}</div>
+        <div class="cost-summary-label">Waste Entries</div>
+      </div>
+      <div class="cost-summary-card">
+        <div class="cost-summary-value">${stats.totalQty}</div>
+        <div class="cost-summary-label">Units Lost</div>
+      </div>
+      <div class="cost-summary-card profit-negative">
+        <div class="cost-summary-value">$${stats.totalCost.toFixed(2)}</div>
+        <div class="cost-summary-label">Total Impact</div>
+      </div>
     </div>
   `;
 
