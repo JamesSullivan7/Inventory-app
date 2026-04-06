@@ -62,7 +62,9 @@ async function init() {
 }
 
 async function loadApp() {
-  showLoading('Loading your business...');
+  try {
+    showLoading('Loading your business...');
+  } catch(e) {}
 
   // Hide login overlay if visible
   const loginOverlay = document.getElementById('login-overlay');
@@ -2411,9 +2413,14 @@ function exportCSV() {
 
 init().catch(err => {
   console.error('Init failed:', err);
+  // If it's a session/auth error, show login page instead of crashing
+  if (err.message?.includes('Session expired') || err.message?.includes('401') || err.message?.includes('token') || err.message?.includes('Unauthorized')) {
+    showLoginPage();
+    return;
+  }
   document.body.innerHTML = `<div style="padding:40px;text-align:center;color:#e07070;">
     <h2>Failed to initialize</h2>
     <p>${err.message}</p>
-    <p style="margin-top:16px;color:#8a8a9a;">Your browser may not support IndexedDB. Please use a modern browser.</p>
+    <button onclick="location.reload()" style="margin-top:16px;padding:10px 24px;background:#8a8aff;color:#141418;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">Reload</button>
   </div>`;
 });
