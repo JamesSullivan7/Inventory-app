@@ -1119,9 +1119,9 @@ function renderSettingsPage() {
         <input type="checkbox" class="sw-toggle" id="set-dark-mode" ${theme.mode !== 'light' ? 'checked' : ''} />
         <label for="set-dark-mode">Dark Mode</label>
       </div>
-      <div class="color-row"><label>Accent Color</label><input type="color" id="set-color-accent" value="${theme.accent || '#8a8aff'}" /></div>
-      <div class="color-row"><label>Background</label><input type="color" id="set-color-bg" value="${theme.bg || '#141418'}" /></div>
-      <div class="color-row"><label>Surface</label><input type="color" id="set-color-surface" value="${theme.surface || '#1e1e24'}" /></div>
+      <div class="color-row"><label>Accent Color</label><input type="color" id="set-color-accent" value="${theme.accent || '#c8a06a'}" /></div>
+      <div class="color-row"><label>Background</label><input type="color" id="set-color-bg" value="${theme.bg || '#0f0d0b'}" /></div>
+      <div class="color-row"><label>Surface</label><input type="color" id="set-color-surface" value="${theme.surface || '#1a1714'}" /></div>
       <div class="color-row"><label>Border</label><input type="color" id="set-color-border" value="${theme.border || '#38383e'}" /></div>
       <div class="color-row"><label>Text</label><input type="color" id="set-color-text" value="${theme.text || '#e8e8f0'}" /></div>
       <div class="color-row"><label>Muted Text</label><input type="color" id="set-color-muted" value="${theme.textMuted || '#8a8a9a'}" /></div>
@@ -2791,6 +2791,6 @@ init().catch(err => {
   document.body.innerHTML = `<div style="padding:40px;text-align:center;color:#e07070;">
     <h2>Failed to initialize</h2>
     <p>${err.message}</p>
-    <button onclick="location.reload()" style="margin-top:16px;padding:10px 24px;background:#8a8aff;color:#141418;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">Reload</button>
+    <button onclick="location.reload()" style="margin-top:16px;padding:10px 24px;background:#c8a06a;color:#0f0d0b;border:none;border-radius:8px;cursor:pointer;font-size:0.9rem;">Reload</button>
   </div>`;
 });
