@@ -23,8 +23,10 @@ export function renderHeader() {
   if (logoEl) {
     if (logoURL) {
       logoEl.innerHTML = `<img src="${logoURL}" alt="Logo" style="width:38px;height:38px;border-radius:6px;object-fit:cover;" />`;
+      logoEl.style.display = '';
     } else {
-      logoEl.innerHTML = defaultLogoSVG();
+      logoEl.innerHTML = '';
+      logoEl.style.display = 'none';
     }
   }
 
