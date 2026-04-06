@@ -1101,7 +1101,8 @@ input[type=checkbox].sw-toggle { width: 17px; height: 17px; accent-color: var(--
   border-radius: 20px;
 }
 .tier-free { background: var(--surface2); color: var(--text-muted); }
-.tier-pro { background: rgba(138,138,255,0.15); color: var(--accent); }
+.tier-starter { background: rgba(200,160,106,0.15); color: var(--accent); }
+.tier-pro { background: rgba(200,160,106,0.25); color: var(--accent); }
 .tier-business { background: rgba(80,200,120,0.15); color: var(--success); }
 
 /* ── CSV Import Modal ─────────────────────────────── */

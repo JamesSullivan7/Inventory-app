@@ -269,29 +269,29 @@ function showLandingPage() {
         <p class="landing-section-sub">Start free. Upgrade when you're ready.</p>
         <div class="landing-pricing-grid">
           <div class="landing-pricing-card">
-            <h3>Free</h3>
-            <div class="landing-price">$0<span>/mo</span></div>
+            <h3>Starter</h3>
+            <div class="landing-price">$49<span>/mo</span></div>
             <ul>
-              <li>25 products</li>
-              <li>50 materials</li>
-              <li>Basic cost tracking</li>
+              <li>100 products & materials</li>
+              <li>Cost tracking & P&L</li>
+              <li>CSV bulk import</li>
             </ul>
             <a href="#get-started" class="landing-btn-secondary landing-btn-block">Get Started</a>
           </div>
           <div class="landing-pricing-card landing-pricing-popular">
             <div class="landing-popular-badge">Popular</div>
             <h3>Pro</h3>
-            <div class="landing-price">$19<span>/mo</span></div>
+            <div class="landing-price">$99<span>/mo</span></div>
             <ul>
-              <li>Unlimited products</li>
-              <li>Plaid banking</li>
+              <li>Unlimited everything</li>
+              <li>Plaid bank connection</li>
               <li>Full cost analysis</li>
             </ul>
             <a href="#get-started" class="landing-btn-primary landing-btn-block">Start Free Trial</a>
           </div>
           <div class="landing-pricing-card">
             <h3>Business</h3>
-            <div class="landing-price">$49<span>/mo</span></div>
+            <div class="landing-price">$199<span>/mo</span></div>
             <ul>
               <li>Everything in Pro</li>
               <li>QuickBooks sync</li>
@@ -1492,8 +1492,8 @@ async function handleMainClick(e) {
 
     case 'add-product': {
       const tier = getSubscriptionTier();
-      if (tier === 'free' && products.getAllProducts().length >= 25) {
-        toast('Free plan limited to 25 products. Upgrade to Pro for unlimited.', 'warning');
+      if ((tier === 'free' || tier === 'starter') && products.getAllProducts().length >= 100) {
+        toast('Starter plan limited to 100 products. Upgrade to Pro for unlimited.', 'warning');
         break;
       }
       showAddProductModal();
@@ -1502,8 +1502,8 @@ async function handleMainClick(e) {
 
     case 'add-material': {
       const tier = getSubscriptionTier();
-      if (tier === 'free' && materials.getAllMaterials().length >= 50) {
-        toast('Free plan limited to 50 materials. Upgrade to Pro for unlimited.', 'warning');
+      if ((tier === 'free' || tier === 'starter') && materials.getAllMaterials().length >= 200) {
+        toast('Starter plan limited to 200 materials. Upgrade to Pro for unlimited.', 'warning');
         break;
       }
       showAddMaterialModal();

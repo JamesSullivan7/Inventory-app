@@ -14,9 +14,9 @@ const SITE_URL = process.env.SITE_URL || 'https://inventory-app-eight-delta.verc
 
 // Price IDs (set these after creating products in Stripe Dashboard)
 const PRICE_IDS = {
+  starter: process.env.STRIPE_PRICE_STARTER || 'price_starter_placeholder',
   pro: process.env.STRIPE_PRICE_PRO || 'price_pro_placeholder',
   business: process.env.STRIPE_PRICE_BUSINESS || 'price_business_placeholder',
-  lifetime: process.env.STRIPE_PRICE_LIFETIME || 'price_lifetime_placeholder',
 };
 
 module.exports = async (req, res) => {

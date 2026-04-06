@@ -9,31 +9,32 @@ import { getAuthHeaders } from '../supabase.js';
 export function renderPricingPage(currentTier = 'free', status = 'active') {
   const plans = [
     {
-      id: 'free',
-      name: 'Free',
-      price: '$0',
-      period: 'forever',
+      id: 'starter',
+      name: 'Starter',
+      price: '$49',
+      period: '/month',
       features: [
-        'Up to 25 products',
-        'Up to 50 materials',
-        'Basic cost tracking',
-        'Manual transactions',
-        'Single user',
+        'Up to 100 products',
+        'Up to 200 materials',
+        'Cost tracking & P&L',
+        'Recipe management',
+        'CSV bulk import',
+        'Email support',
       ],
-      cta: currentTier === 'free' ? 'Current Plan' : 'Downgrade',
-      current: currentTier === 'free',
+      cta: currentTier === 'starter' ? 'Current Plan' : 'Get Started',
+      current: currentTier === 'starter',
     },
     {
       id: 'pro',
       name: 'Pro',
-      price: '$19',
+      price: '$99',
       period: '/month',
       features: [
         'Unlimited products & materials',
-        'Full cost analysis & P&L',
-        'Break-even analysis',
+        'Full cost analysis & break-even',
         'Plaid bank connection',
         'Transaction auto-import',
+        'Variable cost tracking',
         'Priority support',
       ],
       cta: currentTier === 'pro' ? 'Current Plan' : 'Upgrade to Pro',
@@ -43,7 +44,7 @@ export function renderPricingPage(currentTier = 'free', status = 'active') {
     {
       id: 'business',
       name: 'Business',
-      price: '$49',
+      price: '$199',
       period: '/month',
       features: [
         'Everything in Pro',
@@ -101,7 +102,7 @@ export function renderPricingPage(currentTier = 'free', status = 'active') {
 // ── Billing Section for Settings Page ───────────────
 
 export function renderBillingSection(tier = 'free', status = 'active') {
-  const tierNames = { free: 'Free', pro: 'Pro', business: 'Business', lifetime: 'Lifetime' };
+  const tierNames = { free: 'Free', starter: 'Starter', pro: 'Pro', business: 'Business' };
   const tierName = tierNames[tier] || 'Free';
 
   let html = `
@@ -117,8 +118,8 @@ export function renderBillingSection(tier = 'free', status = 'active') {
         Upgrade to unlock Plaid banking, QuickBooks sync, and unlimited products.
       </p>
       <div style="display:flex;gap:8px;">
-        <button class="btn-primary" data-action="subscribe" data-tier="pro">Upgrade to Pro — $19/mo</button>
-        <button class="btn-secondary" data-action="subscribe" data-tier="business">Business — $49/mo</button>
+        <button class="btn-primary" data-action="subscribe" data-tier="starter">Get Starter — $49/mo</button>
+        <button class="btn-secondary" data-action="subscribe" data-tier="pro">Pro — $99/mo</button>
       </div>`;
   } else {
     html += `
