@@ -453,7 +453,7 @@ html { scroll-behavior: smooth; }
 
 .landing-nav-brand {
   font-family: 'Georgia', serif;
-  font-size: 1.4rem;
+  font-size: 1.8rem;
   color: var(--accent, #c8a06a);
   letter-spacing: 0.04em;
   font-weight: normal;
