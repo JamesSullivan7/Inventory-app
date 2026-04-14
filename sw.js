@@ -1,6 +1,6 @@
 // ── Service Worker — Cache-First Offline PWA ─────────
 
-const CACHE_NAME = 'inv-platform-v13';
+const CACHE_NAME = 'inv-platform-v14';
 const ASSETS = [
   '/',
   '/index.html',
@@ -13,6 +13,8 @@ const ASSETS = [
   '/js/db.js',
   '/js/config.js',
   '/js/router.js',
+  '/js/supabase.js',
+  '/js/api-client.js',
   '/js/stores/products.js',
   '/js/stores/materials.js',
   '/js/stores/history.js',
@@ -20,8 +22,22 @@ const ASSETS = [
   '/js/stores/expenses.js',
   '/js/stores/transactions.js',
   '/js/stores/locations.js',
+  '/js/stores/customers.js',
+  '/js/stores/sales.js',
+  '/js/stores/batches.js',
+  '/js/stores/orders.js',
+  '/js/stores/recipes.js',
+  '/js/stores/suppliers.js',
+  '/js/stores/waste.js',
   '/js/services/cost-analysis.js',
   '/js/services/plaid.js',
+  '/js/services/quickbooks.js',
+  '/js/services/ecommerce.js',
+  '/js/services/shipping.js',
+  '/js/services/auto-order.js',
+  '/js/services/csv-import.js',
+  '/js/services/forecasting.js',
+  '/js/services/migration.js',
   '/js/ui/header.js',
   '/js/ui/alerts.js',
   '/js/ui/cards.js',
@@ -32,17 +48,10 @@ const ASSETS = [
   '/js/ui/cost-analysis.js',
   '/js/ui/transactions.js',
   '/js/ui/plaid.js',
-  '/js/services/quickbooks.js',
-  '/js/services/ecommerce.js',
-  '/js/services/shipping.js',
   '/js/ui/quickbooks.js',
   '/js/ui/ecommerce.js',
   '/js/ui/tutorial.js',
-  '/js/supabase.js',
-  '/js/api-client.js',
   '/js/ui/pricing.js',
-  '/js/stores/customers.js',
-  '/js/stores/sales.js',
   '/manifest.json',
 ];
 

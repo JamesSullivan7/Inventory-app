@@ -253,6 +253,18 @@
 
 /* ── Settings ────────────────────────────────────── */
 
+.status-grid { display: flex; flex-direction: column; gap: 6px; }
+.status-item {
+  padding: 8px 12px; border-radius: 6px; font-size: 0.82rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.status-ok { color: var(--success); }
+.status-ok::before { content: '\2713'; font-weight: bold; }
+.status-warn { color: var(--warning); }
+.status-warn::before { content: '\26A0'; }
+.status-error { color: var(--danger); }
+.status-error::before { content: '\2717'; }
+
 .settings-section {
   background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
   padding: 22px 24px; margin-bottom: 18px;
