@@ -345,15 +345,15 @@ function showLandingPage() {
         <div class="landing-pain-points">
           <div class="landing-pain-card">
             <span class="landing-pain-icon">?</span>
-            <p>What does each product actually cost to make?</p>
+            <p>What does each product actually cost &mdash; including materials, labor, shipping, and fees?</p>
           </div>
           <div class="landing-pain-card">
             <span class="landing-pain-icon">?</span>
-            <p>After rent, fees, and labor &mdash; am I profitable?</p>
+            <p>After rent, insurance, and marketplace commissions &mdash; am I even profitable?</p>
           </div>
           <div class="landing-pain-card">
             <span class="landing-pain-icon">?</span>
-            <p>Which products should I make more of?</p>
+            <p>Which products make money and which ones are draining my business?</p>
           </div>
         </div>
         <p class="landing-closing-text">ClearCost answers all three in real time.</p>
@@ -364,27 +364,175 @@ function showLandingPage() {
     <section class="landing-section" id="features">
       <div class="landing-container">
         <h2 class="landing-section-title">Everything You Need to Run Your Business</h2>
-        <div class="landing-features-grid">
-          <div class="landing-feature-card">
-            <div class="landing-feature-icon">&#9881;</div>
-            <h3>Smart Inventory</h3>
-            <p>Track products, materials, recipes, and suppliers. Get low-stock alerts and auto-generate purchase orders.</p>
+        <p class="landing-section-subtitle">One platform. No more juggling spreadsheets, accounting software, and inventory tools.</p>
+
+        <div class="feature-categories">
+
+          <div class="feature-category" data-category="inventory">
+            <div class="feature-cat-header">
+              <div class="feature-cat-icon">📦</div>
+              <div class="feature-cat-info">
+                <h3>Inventory Management</h3>
+                <p>Track products, materials, recipes, and suppliers in real time</p>
+              </div>
+              <span class="feature-cat-toggle">+</span>
+            </div>
+            <div class="feature-cat-details">
+              <ul>
+                <li>Product tracking with quantities, SKUs, and sell prices</li>
+                <li>Raw material management with costs and supplier links</li>
+                <li>Bill of Materials (recipes) with exact ingredient quantities</li>
+                <li>Supplier database with contact info, lead times, and ratings</li>
+                <li>Purchase orders (create, send, receive, cancel)</li>
+                <li>Production runs with automatic material deduction</li>
+                <li>Barcode scanning via phone camera</li>
+                <li>Multi-warehouse location tracking and stock transfers</li>
+                <li>Low stock alerts with per-product thresholds</li>
+                <li>CSV bulk import for quick data migration</li>
+              </ul>
+            </div>
           </div>
-          <div class="landing-feature-card">
-            <div class="landing-feature-icon">&#36;</div>
-            <h3>True Cost Analysis</h3>
-            <p>See your real COGS per product: materials + labor + shipping + fees. Know your contribution margin and break-even point.</p>
+
+          <div class="feature-category" data-category="costs">
+            <div class="feature-cat-header">
+              <div class="feature-cat-icon">📊</div>
+              <div class="feature-cat-info">
+                <h3>True Cost Analysis</h3>
+                <p>See your real profit per product — not just revenue minus materials</p>
+              </div>
+              <span class="feature-cat-toggle">+</span>
+            </div>
+            <div class="feature-cat-details">
+              <ul>
+                <li>COGS per product (materials + labor + shipping + fees)</li>
+                <li>Full P&amp;L statement: Revenue → COGS → Gross Profit → Overhead → Net Profit</li>
+                <li>Break-even analysis — units needed to cover all fixed costs</li>
+                <li>Contribution margin per product</li>
+                <li>Variable cost modeling (per-unit, per-batch, % of revenue)</li>
+                <li>Fixed overhead allocation across products</li>
+                <li>Expense tracking (rent, insurance, utilities, labor, marketing)</li>
+                <li>Per-product profitability ranking</li>
+              </ul>
+            </div>
           </div>
-          <div class="landing-feature-card">
-            <div class="landing-feature-icon">&#9741;</div>
-            <h3>Bank Connection</h3>
-            <p>Connect your bank and credit cards via Plaid. Transactions import automatically and feed your cost analysis.</p>
+
+          <div class="feature-category" data-category="sales">
+            <div class="feature-cat-header">
+              <div class="feature-cat-icon">🛒</div>
+              <div class="feature-cat-info">
+                <h3>Customers & Sales</h3>
+                <p>Manage customers, create orders, and track the full sales lifecycle</p>
+              </div>
+              <span class="feature-cat-toggle">+</span>
+            </div>
+            <div class="feature-cat-details">
+              <ul>
+                <li>Customer database with contact info and purchase history</li>
+                <li>Sales orders (draft → confirmed → shipped → delivered → paid)</li>
+                <li>Automatic inventory deduction when orders ship</li>
+                <li>Income transactions created automatically when orders are paid</li>
+                <li>Order tracking with status badges</li>
+                <li>Customer lifetime value tracking</li>
+              </ul>
+            </div>
           </div>
-          <div class="landing-feature-card">
-            <div class="landing-feature-icon">&#8644;</div>
-            <h3>QuickBooks Sync</h3>
-            <p>Two-way sync with QuickBooks Online. Push products, suppliers, expenses. Pull P&amp;L reports.</p>
+
+          <div class="feature-category" data-category="ecommerce">
+            <div class="feature-cat-header">
+              <div class="feature-cat-icon">🏪</div>
+              <div class="feature-cat-info">
+                <h3>Etsy & Shopify Integration</h3>
+                <p>Connect your online stores and auto-sync orders</p>
+              </div>
+              <span class="feature-cat-toggle">+</span>
+            </div>
+            <div class="feature-cat-details">
+              <ul>
+                <li>Connect Etsy and Shopify stores via OAuth</li>
+                <li>Automatic order import — sales appear in ClearCost instantly</li>
+                <li>Webhook auto-sync — inventory updates in real time when orders come in</li>
+                <li>Product matching by SKU across platforms</li>
+                <li>Manual sync option for on-demand order pulls</li>
+              </ul>
+            </div>
           </div>
+
+          <div class="feature-category" data-category="banking">
+            <div class="feature-cat-header">
+              <div class="feature-cat-icon">🏦</div>
+              <div class="feature-cat-info">
+                <h3>Bank & Card Connection</h3>
+                <p>Import transactions automatically from your bank accounts and credit cards</p>
+              </div>
+              <span class="feature-cat-toggle">+</span>
+            </div>
+            <div class="feature-cat-details">
+              <ul>
+                <li>Connect bank accounts and credit cards via Plaid</li>
+                <li>Automatic transaction import with smart categorization</li>
+                <li>Income and expense tracking feeds into your P&amp;L</li>
+                <li>Powered by Plaid (same infrastructure as Venmo, Robinhood)</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="feature-category" data-category="accounting">
+            <div class="feature-cat-header">
+              <div class="feature-cat-icon">📒</div>
+              <div class="feature-cat-info">
+                <h3>QuickBooks Sync</h3>
+                <p>Two-way sync with QuickBooks Online for seamless accounting</p>
+              </div>
+              <span class="feature-cat-toggle">+</span>
+            </div>
+            <div class="feature-cat-details">
+              <ul>
+                <li>Push products, suppliers, and expenses to QuickBooks</li>
+                <li>Pull P&amp;L reports directly from QuickBooks</li>
+                <li>OAuth-secured connection</li>
+                <li>Keep both systems in sync automatically</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="feature-category" data-category="shipping">
+            <div class="feature-cat-header">
+              <div class="feature-cat-icon">📬</div>
+              <div class="feature-cat-info">
+                <h3>Shipping & Labels</h3>
+                <p>Compare rates and generate shipping labels without leaving the app</p>
+              </div>
+              <span class="feature-cat-toggle">+</span>
+            </div>
+            <div class="feature-cat-details">
+              <ul>
+                <li>Rate comparison across USPS, UPS, and FedEx</li>
+                <li>Generate shipping labels directly from sales orders</li>
+                <li>Tracking number auto-attached to orders</li>
+                <li>Powered by EasyPost</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="feature-category" data-category="team">
+            <div class="feature-cat-header">
+              <div class="feature-cat-icon">👥</div>
+              <div class="feature-cat-info">
+                <h3>Team & Permissions</h3>
+                <p>Invite team members with role-based access control</p>
+              </div>
+              <span class="feature-cat-toggle">+</span>
+            </div>
+            <div class="feature-cat-details">
+              <ul>
+                <li>Invite members by email</li>
+                <li>Four roles: Owner, Manager, Staff, Viewer</li>
+                <li>Role-based feature access (staff can't see financials)</li>
+                <li>Remove or change roles anytime</li>
+              </ul>
+            </div>
+          </div>
+
         </div>
       </div>
     </section>
@@ -396,18 +544,18 @@ function showLandingPage() {
         <div class="landing-steps">
           <div class="landing-step">
             <div class="landing-step-number">1</div>
-            <h3>Sign Up Free</h3>
-            <p>Create your account in 30 seconds. Pick your business type and we'll set up your workspace.</p>
+            <h3>Sign Up in 30 Seconds</h3>
+            <p>Pick your business type, name your shop, and you're in. Import existing data via CSV or start fresh.</p>
           </div>
           <div class="landing-step">
             <div class="landing-step-number">2</div>
-            <h3>Add Your Products</h3>
-            <p>Enter your products, materials, and recipes. Set costs and sell prices.</p>
+            <h3>Add Your Products & Costs</h3>
+            <p>Enter products, materials, and recipes. Connect your bank, Etsy, or Shopify. Set your expenses.</p>
           </div>
           <div class="landing-step">
             <div class="landing-step-number">3</div>
-            <h3>See Your Profit</h3>
-            <p>Instantly see your P&amp;L, COGS per product, and break-even analysis. Know exactly where your money goes.</p>
+            <h3>See Your True Profit</h3>
+            <p>Instantly see your P&amp;L, COGS per product, break-even point, and which products are most profitable.</p>
           </div>
         </div>
       </div>
@@ -554,6 +702,18 @@ function showLandingPage() {
         // Close mobile menu if open
         document.getElementById('landing-mobile-menu')?.classList.remove('open');
       }
+    });
+  });
+
+  // ── Feature category expand/collapse ──
+  overlay.querySelectorAll('.feature-cat-header').forEach(header => {
+    header.addEventListener('click', () => {
+      const category = header.parentElement;
+      const isOpen = category.classList.contains('open');
+      // Close all others
+      overlay.querySelectorAll('.feature-category.open').forEach(c => c.classList.remove('open'));
+      // Toggle this one
+      if (!isOpen) category.classList.add('open');
     });
   });
 
