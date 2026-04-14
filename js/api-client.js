@@ -85,3 +85,43 @@ export async function apiUpdateProfile(data) {
     body: JSON.stringify(data),
   });
 }
+
+// ── Team Management ────────────────────────────────
+
+const TEAM_API = '/api/team';
+
+export async function apiTeamInvite(email, role) {
+  return apiFetch(`${TEAM_API}?action=invite`, {
+    method: 'POST',
+    body: JSON.stringify({ email, role }),
+  });
+}
+
+export async function apiTeamAccept(inviteId) {
+  return apiFetch(`${TEAM_API}?action=accept`, {
+    method: 'POST',
+    body: JSON.stringify({ inviteId }),
+  });
+}
+
+export async function apiTeamList() {
+  return apiFetch(`${TEAM_API}?action=list`);
+}
+
+export async function apiTeamRemove(memberId) {
+  return apiFetch(`${TEAM_API}?action=remove`, {
+    method: 'POST',
+    body: JSON.stringify({ memberId }),
+  });
+}
+
+export async function apiTeamUpdateRole(memberId, role) {
+  return apiFetch(`${TEAM_API}?action=update-role`, {
+    method: 'POST',
+    body: JSON.stringify({ memberId, role }),
+  });
+}
+
+export async function apiTeamCheckInvites() {
+  return apiFetch(`${TEAM_API}?action=check-invites`);
+}

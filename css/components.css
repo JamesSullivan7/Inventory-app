@@ -1294,3 +1294,17 @@ input[type=checkbox].sw-toggle { width: 17px; height: 17px; accent-color: var(--
 .shipping-service { font-size: 0.8rem; color: var(--text-muted); }
 .shipping-price { font-size: 1.1rem; font-weight: 700; color: var(--accent); margin-top: 8px; }
 .shipping-days { font-size: 0.75rem; color: var(--text-muted); }
+
+/* ── Team Members ───────────────────────────────────── */
+
+.team-members-list { display: flex; flex-direction: column; gap: 6px; }
+.team-member-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 12px; background: var(--bg); border-radius: 8px; }
+.team-member-info { flex: 1; }
+.team-member-name { font-weight: 500; color: var(--text); }
+.team-member-email { font-size: 0.78rem; color: var(--text-muted); }
+.team-role-badge { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; }
+.role-owner { background: rgba(200,160,106,0.2); color: var(--accent); }
+.role-manager { background: rgba(100,180,255,0.12); color: #64b4ff; }
+.role-staff { background: var(--surface2); color: var(--text-muted); }
+.role-viewer { background: var(--surface2); color: var(--text-muted); opacity: 0.7; }
+.team-status-pending { font-size: 0.72rem; color: var(--warning); font-style: italic; }

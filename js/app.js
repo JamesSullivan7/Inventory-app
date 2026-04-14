@@ -30,7 +30,7 @@ import { renderTransactionsPage, getTransactionFormFields, setPlaidAccounts, set
 import { openPlaidLink, getLinkedAccounts, syncTransactions, syncAllAccounts, removeAccount } from './services/plaid.js';
 import { connectQuickBooks, disconnectQuickBooks, getQBStatus, syncProducts as qbSyncProducts, syncSuppliers as qbSyncSuppliers, syncExpenses as qbSyncExpenses, fetchPLReport } from './services/quickbooks.js';
 import { renderQuickBooksSection } from './ui/quickbooks.js';
-import { apiUpdateProfile } from './api-client.js';
+import { apiUpdateProfile, apiTeamInvite, apiTeamAccept, apiTeamList, apiTeamRemove, apiTeamUpdateRole, apiTeamCheckInvites } from './api-client.js';
 import {
   initSupabase, getSession, signUp, signIn, signOut,
   getBusinessProfile, getCachedBusiness, isAuthenticated,
@@ -66,6 +66,99 @@ let productFilter = 'all';
 let productSearch = '';
 let materialSearch = '';
 let historyFilter = 'all';
+let currentUserRole = 'owner'; // default until loaded
+let deferredPrompt = null;
+
+// ── PWA Install Prompt ──────────────────────────────
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  const btn = document.getElementById('btn-install-app');
+  if (btn) btn.style.display = 'block';
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredPrompt = null;
+  const btn = document.getElementById('btn-install-app');
+  if (btn) btn.style.display = 'none';
+});
+
+// ── Roles & Permissions ─────────────────────────────
+
+const ROLE_HIERARCHY = { owner: 4, manager: 3, staff: 2, viewer: 1 };
+
+function hasPermission(requiredRole) {
+  return (ROLE_HIERARCHY[currentUserRole] || 0) >= (ROLE_HIERARCHY[requiredRole] || 99);
+}
+
+async function getCurrentUserRole() {
+  try {
+    const members = await apiTeamList();
+    const session = await getSession();
+    const myId = session?.user?.id;
+    if (!myId) return 'owner';
+    const me = members.find(m => m.user_id === myId);
+    return me?.role || 'owner';
+  } catch (e) {
+    console.warn('Could not fetch user role:', e);
+    return 'owner'; // fallback to owner for business owners
+  }
+}
+
+function applyRoleRestrictions() {
+  const sidebar = document.getElementById('sidebar');
+  if (!sidebar) return;
+
+  // Tab visibility by role
+  const tabRestrictions = {
+    viewer: ['expenses', 'costs', 'transactions', 'pricing', 'settings'],
+    staff: ['costs', 'expenses', 'transactions', 'pricing'],
+  };
+
+  // First show all tabs
+  sidebar.querySelectorAll('.tab[data-tab]').forEach(tab => tab.style.display = '');
+
+  // Hide restricted tabs
+  const hidden = currentUserRole === 'viewer' ? tabRestrictions.viewer
+    : currentUserRole === 'staff' ? tabRestrictions.staff
+    : [];
+
+  hidden.forEach(tab => {
+    const el = sidebar.querySelector(`[data-tab="${tab}"]`);
+    if (el) el.style.display = 'none';
+  });
+
+  // Hide action buttons for viewer
+  if (currentUserRole === 'viewer') {
+    document.querySelectorAll('[data-action="add-product"], [data-action="add-material"], [data-action="import-products-csv"], [data-action="import-materials-csv"]').forEach(b => b.style.display = 'none');
+  }
+
+  // Hide pricing tab for manager
+  if (currentUserRole === 'manager') {
+    const pricingTab = sidebar.querySelector('[data-tab="pricing"]');
+    if (pricingTab) pricingTab.style.display = 'none';
+  }
+}
+
+async function checkPendingInvites() {
+  try {
+    const { invites } = await apiTeamCheckInvites();
+    if (!invites || invites.length === 0) return;
+
+    for (const invite of invites) {
+      const accepted = confirm(`You've been invited to join "${invite.businessName}" as ${invite.role}. Accept?`);
+      if (accepted) {
+        await apiTeamAccept(invite.id);
+        toast(`Joined ${invite.businessName}!`, 'success');
+        location.reload();
+        return;
+      }
+    }
+  } catch (e) {
+    console.warn('Invite check failed:', e);
+  }
+}
 
 // ── Init ─────────────────────────────────────────────
 
@@ -158,6 +251,10 @@ async function loadApp() {
     return;
   }
 
+  // Check pending team invites and load current user role
+  await checkPendingInvites();
+  currentUserRole = await getCurrentUserRole();
+
   // Load all data
   await Promise.all([
     products.loadProducts(),
@@ -184,6 +281,7 @@ async function loadApp() {
   initRouter();
   renderAll();
   setupEventListeners();
+  applyRoleRestrictions();
   hideLoading();
 
   // Register service worker
@@ -1381,6 +1479,13 @@ function renderSettingsPage() {
 
     <div id="billing-section-container"></div>
 
+    ${hasPermission('owner') ? `
+    <div class="settings-section">
+      <h3>Team Members</h3>
+      <div id="team-section-container">Loading...</div>
+    </div>
+    ` : ''}
+
     <div id="ecommerce-section-container"></div>
 
     <div id="qb-section-container"></div>
@@ -1403,6 +1508,9 @@ function renderSettingsPage() {
 
   // Load billing section
   loadBillingSection();
+
+  // Load team section
+  if (hasPermission('owner')) loadTeamSection();
 
   // Load Sales Channels (Etsy/Shopify) section
   loadEcommerceSection();
@@ -1616,6 +1724,17 @@ function showSetupWizard() {
 // ── Event Listeners ──────────────────────────────────
 
 function setupEventListeners() {
+  // Install app button
+  document.getElementById('btn-install-app')?.addEventListener('click', async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const result = await deferredPrompt.userChoice;
+      if (result.outcome === 'accepted') toast('App installed!', 'success');
+      deferredPrompt = null;
+      document.getElementById('btn-install-app').style.display = 'none';
+    }
+  });
+
   // Logout button
   document.getElementById('btn-logout')?.addEventListener('click', async () => {
     await signOut();
@@ -2563,6 +2682,112 @@ let _shippingRates = [];
 let _shippingShipmentId = null;
 let _shippingForSaleId = null;
 let _selectedShippingRate = null;
+
+// ── Team Section ────────────────────────────────────
+
+async function loadTeamSection() {
+  const container = document.getElementById('team-section-container');
+  if (!container) return;
+
+  try {
+    const members = await apiTeamList();
+    let html = '<div class="team-members-list">';
+
+    members.forEach(m => {
+      const roleClass = `role-${m.role}`;
+      const isPending = m.status === 'pending';
+      html += `
+        <div class="team-member-row">
+          <div class="team-member-info">
+            <div class="team-member-name">${escHtml(m.email)}</div>
+            ${isPending ? '<span class="team-status-pending">Invite pending</span>' : ''}
+          </div>
+          <span class="team-role-badge ${roleClass}">${m.role}</span>
+          ${m.isOwner ? '' : `
+            <select class="team-role-select" data-member-id="${m.id}" style="margin-left:8px;font-size:0.78rem;padding:3px 6px;border-radius:6px;background:var(--surface);color:var(--text);border:1px solid var(--border);">
+              <option value="manager" ${m.role === 'manager' ? 'selected' : ''}>Manager</option>
+              <option value="staff" ${m.role === 'staff' ? 'selected' : ''}>Staff</option>
+              <option value="viewer" ${m.role === 'viewer' ? 'selected' : ''}>Viewer</option>
+            </select>
+            <button class="btn-icon team-remove-btn" data-action="remove-team-member" data-id="${m.id}" title="Remove member" style="margin-left:6px;color:var(--danger);font-size:1rem;cursor:pointer;background:none;border:none;">&#10005;</button>
+          `}
+        </div>`;
+    });
+
+    html += '</div>';
+    html += `
+      <div style="margin-top:14px;">
+        <button class="btn-primary" id="btn-invite-member">+ Invite Member</button>
+      </div>
+      <div style="margin-top:8px;font-size:0.72rem;color:var(--text-muted);">
+        <strong>Roles:</strong> Owner = full access | Manager = everything except billing & team | Staff = inventory CRUD only | Viewer = read-only
+      </div>`;
+
+    container.innerHTML = html;
+
+    // Invite button
+    document.getElementById('btn-invite-member')?.addEventListener('click', showInviteMemberModal);
+
+    // Role change selects
+    container.querySelectorAll('.team-role-select').forEach(sel => {
+      sel.addEventListener('change', async (e) => {
+        const memberId = e.target.dataset.memberId;
+        const newRole = e.target.value;
+        try {
+          await apiTeamUpdateRole(memberId, newRole);
+          toast('Role updated', 'success');
+        } catch (err) {
+          toast(friendlyError(err), 'error');
+          loadTeamSection(); // reload to reset
+        }
+      });
+    });
+
+    // Remove buttons
+    container.querySelectorAll('[data-action="remove-team-member"]').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const memberId = btn.dataset.id;
+        if (!confirm('Remove this team member?')) return;
+        try {
+          await apiTeamRemove(memberId);
+          toast('Member removed', 'success');
+          loadTeamSection();
+        } catch (err) {
+          toast(friendlyError(err), 'error');
+        }
+      });
+    });
+
+  } catch (err) {
+    container.innerHTML = `<p style="color:var(--text-muted);">Could not load team members.</p>`;
+    console.warn('Team section error:', err);
+  }
+}
+
+function showInviteMemberModal() {
+  showFormModal({
+    title: 'Invite Team Member',
+    fields: [
+      { key: 'email', label: 'Email Address', type: 'email', required: true },
+      { key: 'role', label: 'Role', type: 'select', options: [
+        { value: 'manager', label: 'Manager' },
+        { value: 'staff', label: 'Staff' },
+        { value: 'viewer', label: 'Viewer' },
+      ], required: true },
+    ],
+    onSubmit: async (data) => {
+      try {
+        await apiTeamInvite(data.email, data.role);
+        toast(`Invite sent to ${data.email}`, 'success');
+        loadTeamSection();
+      } catch (err) {
+        toast(friendlyError(err), 'error');
+      }
+    },
+  });
+}
+
+// ── Sales Channels / Ecommerce ──────────────────────
 
 async function loadEcommerceSection() {
   const container = document.getElementById('ecommerce-section-container');

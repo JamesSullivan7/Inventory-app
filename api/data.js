@@ -31,6 +31,8 @@ const TABLE_MAP = {
   customers: 'customers',
   sales: 'sales_orders',
   salesOrders: 'sales_orders',
+  team: 'team_members',
+  teamMembers: 'team_members',
 };
 
 // camelCase → snake_case field mapping per store
@@ -52,6 +54,8 @@ const FIELD_MAPS = {
   customers: { totalSpent: 'total_spent', orderCount: 'order_count', createdAt: 'created_at', updatedAt: 'updated_at' },
   sales: { orderNumber: 'order_number', customerId: 'customer_id', lineItems: 'line_items', shippingCost: 'shipping_cost', shippingAddress: 'shipping_address', trackingNumber: 'tracking_number', paidAt: 'paid_at', shippedAt: 'shipped_at', deliveredAt: 'delivered_at', createdAt: 'created_at', updatedAt: 'updated_at' },
   salesOrders: { orderNumber: 'order_number', customerId: 'customer_id', lineItems: 'line_items', shippingCost: 'shipping_cost', shippingAddress: 'shipping_address', trackingNumber: 'tracking_number', paidAt: 'paid_at', shippedAt: 'shipped_at', deliveredAt: 'delivered_at', createdAt: 'created_at', updatedAt: 'updated_at' },
+  team: { userId: 'user_id', invitedBy: 'invited_by', invitedAt: 'invited_at', acceptedAt: 'accepted_at', createdAt: 'created_at' },
+  teamMembers: { userId: 'user_id', invitedBy: 'invited_by', invitedAt: 'invited_at', acceptedAt: 'accepted_at', createdAt: 'created_at' },
 };
 
 // Convert camelCase record to snake_case for Postgres
