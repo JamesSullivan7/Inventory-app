@@ -1609,6 +1609,7 @@ async function checkSystemStatus() {
       domainEl.className = 'status-item status-warn'; domainEl.textContent = 'Using Default Vercel Domain';
     }
   }
+}
 
 function previewTheme() {
   const theme = {
