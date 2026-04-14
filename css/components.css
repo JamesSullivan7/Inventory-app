@@ -1358,3 +1358,19 @@ input[type=checkbox].sw-toggle { width: 17px; height: 17px; accent-color: var(--
 .take-tour-btn { display: inline-flex; align-items: center; gap: 8px; background: var(--accent); color: var(--bg); border: none; padding: 10px 22px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.85rem; font-family: var(--font-ui); letter-spacing: 0.04em; transition: opacity 0.2s, transform 0.15s; margin-bottom: 16px; }
 .take-tour-btn:hover { opacity: 0.85; }
 .take-tour-btn:active { transform: scale(0.97); }
+
+/* ── Help / FAQ Page ────────────────────────────────── */
+
+.help-search { width: 100%; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 0.9rem; font-family: inherit; margin-bottom: 24px; }
+.help-search::placeholder { color: var(--text-muted); }
+.help-section { margin-bottom: 24px; }
+.help-section-title { font-size: 1rem; color: var(--accent); text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 12px 0; }
+.help-item { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 6px; overflow: hidden; }
+.help-question { padding: 14px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; color: var(--text); font-weight: 500; user-select: none; }
+.help-question:hover { color: var(--accent); }
+.help-toggle { color: var(--accent); transition: transform 0.3s; font-size: 1.1rem; font-weight: 600; }
+.help-item.open .help-toggle { transform: rotate(45deg); }
+.help-answer { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; padding: 0 16px; }
+.help-item.open .help-answer { max-height: 300px; padding: 0 16px 14px; }
+.help-answer p { margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6; }
+.help-answer strong { color: var(--text); }

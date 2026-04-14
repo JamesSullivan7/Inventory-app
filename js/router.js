@@ -8,7 +8,7 @@ const PAGES = [
   'production', 'suppliers', 'orders', 'batches',
   'waste', 'history', 'expenses', 'costs', 'transactions',
   'customers', 'sales',
-  'pricing', 'settings',
+  'pricing', 'help', 'settings',
   'terms', 'privacy',
 ];
 
