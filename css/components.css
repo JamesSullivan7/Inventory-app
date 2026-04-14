@@ -1229,3 +1229,33 @@ input[type=checkbox].sw-toggle { width: 17px; height: 17px; accent-color: var(--
 .location-badge { font-size: 0.65rem; background: var(--surface2); color: var(--text-muted); padding: 2px 8px; border-radius: 10px; margin-left: 6px; }
 .location-filter { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; font-family: inherit; }
 .location-filter:focus { border-color: var(--accent); outline: none; }
+
+/* ── Customer Cards ─────────────────────────────────── */
+
+.customer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+.customer-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; cursor: pointer; transition: border-color 0.2s; }
+.customer-card:hover { border-color: var(--accent); }
+.customer-name { font-weight: 600; font-size: 0.95rem; color: var(--text); }
+.customer-company { font-size: 0.8rem; color: var(--text-muted); }
+.customer-stats { display: flex; gap: 16px; margin-top: 8px; font-size: 0.78rem; color: var(--text-muted); }
+
+/* ── Sales Order List ───────────────────────────────── */
+
+.sales-list { display: flex; flex-direction: column; gap: 8px; }
+.sale-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; transition: border-color 0.2s; }
+.sale-row:hover { border-color: var(--accent); }
+.sale-number { font-weight: 600; color: var(--text); }
+.sale-customer { color: var(--text-muted); font-size: 0.82rem; }
+.sale-total { font-weight: 600; color: var(--accent); }
+.sale-status { font-size: 0.65rem; font-weight: 600; text-transform: uppercase; padding: 3px 10px; border-radius: 20px; }
+.status-draft { background: var(--surface2); color: var(--text-muted); }
+.status-confirmed { background: rgba(200,160,106,0.15); color: var(--accent); }
+.status-shipped { background: rgba(100,180,255,0.12); color: #64b4ff; }
+.status-delivered { background: rgba(80,200,120,0.12); color: var(--success); }
+.status-paid { background: rgba(80,200,120,0.2); color: var(--success); }
+.status-cancelled { background: rgba(224,112,112,0.12); color: var(--danger); }
+
+/* ── Sale Detail Section ────────────────────────────── */
+
+.sale-detail { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-top: 16px; }
+.sale-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }

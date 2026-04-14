@@ -13,6 +13,8 @@ import * as orders from './stores/orders.js';
 import * as batches from './stores/batches.js';
 import * as waste from './stores/waste.js';
 import * as locations from './stores/locations.js';
+import * as customers from './stores/customers.js';
+import * as sales from './stores/sales.js';
 import { renderHeader } from './ui/header.js';
 import { renderAlerts } from './ui/alerts.js';
 import { renderProductGrid, renderMaterialGrid } from './ui/grid.js';
@@ -167,6 +169,8 @@ async function loadApp() {
     locations.loadLocations(),
     expenses.loadExpenses(),
     transactions.loadTransactions(),
+    customers.loadCustomers(),
+    sales.loadSales(),
   ]);
 
   // Register stores for cost analysis UI
@@ -732,6 +736,8 @@ function handlePageChange(page) {
       try { renderTransactionsPage(); } catch (e) { console.error('Transactions re-render error:', e); }
     }).catch(e => console.warn('Plaid accounts fetch failed:', e));
   }
+  else if (page === 'customers') renderCustomersPage();
+  else if (page === 'sales') renderSalesPage();
   else if (page === 'pricing') renderPricingPageWrapper();
   else if (page === 'settings') renderSettingsPage();
   else if (page === 'terms') renderTermsPage();
@@ -2150,6 +2156,252 @@ async function handleMainClick(e) {
         toast(friendlyError(err), 'error');
       }
       break;
+
+    // ── Customer Actions ──
+    case 'add-customer':
+      showFormModal({
+        title: 'Add Customer',
+        fields: [
+          { id: 'cust-name', label: 'Name', type: 'text', required: true, placeholder: 'Customer name' },
+          { id: 'cust-email', label: 'Email', type: 'text', placeholder: 'email@example.com' },
+          { id: 'cust-phone', label: 'Phone', type: 'text', placeholder: '(555) 123-4567' },
+          { id: 'cust-company', label: 'Company', type: 'text', placeholder: 'Company name' },
+          { id: 'cust-address', label: 'Address', type: 'text', placeholder: 'Street, City, State' },
+          { id: 'cust-notes', label: 'Notes', type: 'text', placeholder: 'Optional notes' },
+        ],
+        submitLabel: 'Add Customer',
+        async onSubmit(vals) {
+          await customers.addCustomer({
+            name: vals['cust-name'],
+            email: vals['cust-email'],
+            phone: vals['cust-phone'],
+            company: vals['cust-company'],
+            address: vals['cust-address'],
+            notes: vals['cust-notes'],
+          });
+          renderCustomersPage();
+          toast('Customer added', 'success');
+        },
+      });
+      break;
+
+    case 'edit-customer': {
+      const cust = customers.getCustomerById(id);
+      if (!cust) break;
+      showFormModal({
+        title: 'Edit Customer',
+        fields: [
+          { id: 'cust-name', label: 'Name', type: 'text', required: true, value: cust.name },
+          { id: 'cust-email', label: 'Email', type: 'text', value: cust.email || '' },
+          { id: 'cust-phone', label: 'Phone', type: 'text', value: cust.phone || '' },
+          { id: 'cust-company', label: 'Company', type: 'text', value: cust.company || '' },
+          { id: 'cust-address', label: 'Address', type: 'text', value: cust.address || '' },
+          { id: 'cust-notes', label: 'Notes', type: 'text', value: cust.notes || '' },
+        ],
+        submitLabel: 'Save Changes',
+        async onSubmit(vals) {
+          await customers.updateCustomer(id, {
+            name: vals['cust-name'],
+            email: vals['cust-email'],
+            phone: vals['cust-phone'],
+            company: vals['cust-company'],
+            address: vals['cust-address'],
+            notes: vals['cust-notes'],
+          });
+          renderCustomersPage();
+          toast('Customer updated', 'success');
+        },
+      });
+      break;
+    }
+
+    case 'delete-customer': {
+      const cust = customers.getCustomerById(id);
+      if (!cust || !confirm(`Remove customer "${cust.name}"?`)) break;
+      await customers.deleteCustomer(id);
+      if (selectedCustomerId === id) selectedCustomerId = null;
+      renderCustomersPage();
+      toast(`${cust.name} removed`, 'info');
+      break;
+    }
+
+    case 'view-customer':
+      selectedCustomerId = id;
+      renderCustomersPage();
+      break;
+
+    case 'close-customer-detail':
+      selectedCustomerId = null;
+      renderCustomersPage();
+      break;
+
+    // ── Sales Order Actions ──
+    case 'create-sale': {
+      const allCust = customers.getAllCustomers();
+      const allProds = products.getAllProducts();
+      const custOptions = [{ value: '', label: '-- No customer --' }, ...allCust.map(c => ({ value: String(c.id), label: c.name }))];
+      const prodOptions = allProds.map(p => ({ value: String(p.id), label: `${p.name} ($${(p.sellPrice || 0).toFixed(2)})` }));
+
+      if (!prodOptions.length) { toast('Add products first', 'warning'); break; }
+
+      showFormModal({
+        title: 'New Sales Order',
+        fields: [
+          { id: 'sale-customer', label: 'Customer', type: 'select', options: custOptions },
+          { id: 'sale-product', label: 'Product', type: 'select', options: prodOptions },
+          { id: 'sale-qty', label: 'Quantity', type: 'number', value: '1', required: true },
+          { id: 'sale-price', label: 'Unit Price', type: 'number', value: '', placeholder: 'Auto from product' },
+          { id: 'sale-tax', label: 'Tax', type: 'number', value: '0' },
+          { id: 'sale-shipping', label: 'Shipping Cost', type: 'number', value: '0' },
+          { id: 'sale-notes', label: 'Notes', type: 'text', placeholder: 'Optional notes' },
+        ],
+        submitLabel: 'Create Order',
+        async onSubmit(vals) {
+          const prodId = parseInt(vals['sale-product']);
+          const prod = products.getProductById(prodId);
+          const qty = parseInt(vals['sale-qty']) || 1;
+          const unitPrice = parseFloat(vals['sale-price']) || (prod?.sellPrice || 0);
+          const tax = parseFloat(vals['sale-tax']) || 0;
+          const shippingCost = parseFloat(vals['sale-shipping']) || 0;
+          const subtotal = Math.round(qty * unitPrice * 100) / 100;
+          const total = Math.round((subtotal + tax + shippingCost) * 100) / 100;
+
+          await sales.createSale({
+            customerId: vals['sale-customer'] ? parseInt(vals['sale-customer']) : null,
+            lineItems: [{ productId: prodId, description: prod?.name || 'Product', quantity: qty, unitPrice }],
+            subtotal,
+            tax,
+            shippingCost,
+            total,
+            notes: vals['sale-notes'],
+          });
+          renderSalesPage();
+          toast('Sales order created', 'success');
+        },
+      });
+
+      // Auto-fill price when product changes
+      setTimeout(() => {
+        const prodSelect = document.getElementById('sale-product');
+        const priceInput = document.getElementById('sale-price');
+        if (prodSelect && priceInput) {
+          const initProd = products.getProductById(parseInt(prodSelect.value));
+          if (initProd && !priceInput.value) priceInput.value = (initProd.sellPrice || 0).toFixed(2);
+          prodSelect.addEventListener('change', () => {
+            const p = products.getProductById(parseInt(prodSelect.value));
+            if (p) priceInput.value = (p.sellPrice || 0).toFixed(2);
+          });
+        }
+      }, 100);
+      break;
+    }
+
+    case 'view-sale':
+      selectedSaleId = id;
+      renderSalesPage();
+      break;
+
+    case 'close-sale-detail':
+      selectedSaleId = null;
+      renderSalesPage();
+      break;
+
+    case 'confirm-sale': {
+      const sale = sales.getSaleById(id);
+      if (!sale) break;
+      await sales.confirmSale(id);
+      renderSalesPage();
+      toast(`${sale.orderNumber} confirmed`, 'success');
+      break;
+    }
+
+    case 'ship-sale': {
+      const sale = sales.getSaleById(id);
+      if (!sale) break;
+      const tracking = prompt('Enter tracking number (optional):') || '';
+      await sales.shipSale(id, tracking);
+      // Deduct inventory for line items
+      if (sale.lineItems && sale.lineItems.length) {
+        for (const li of sale.lineItems) {
+          if (li.productId && li.quantity) {
+            try {
+              const result = await products.changeQuantity(li.productId, -li.quantity);
+              if (result) {
+                await history.addEntry({
+                  itemType: 'product', itemId: li.productId,
+                  itemName: result.item.name,
+                  changeType: 'sold', quantityChange: -li.quantity,
+                  newQuantity: result.newQty,
+                  note: `Shipped via ${sale.orderNumber}`,
+                });
+              }
+            } catch (e) { console.warn('Inventory deduction failed:', e); }
+          }
+        }
+      }
+      renderSalesPage();
+      renderInventoryPage();
+      renderHeader();
+      renderAlerts();
+      toast(`${sale.orderNumber} shipped`, 'success');
+      break;
+    }
+
+    case 'deliver-sale': {
+      const sale = sales.getSaleById(id);
+      if (!sale) break;
+      await sales.deliverSale(id);
+      renderSalesPage();
+      toast(`${sale.orderNumber} marked delivered`, 'success');
+      break;
+    }
+
+    case 'mark-sale-paid': {
+      const sale = sales.getSaleById(id);
+      if (!sale) break;
+      await sales.markPaid(id);
+      // Create income transaction
+      try {
+        const cust = sale.customerId ? customers.getCustomerById(sale.customerId) : null;
+        await transactions.addTransaction({
+          type: 'income',
+          amount: sale.total || 0,
+          description: `Payment for ${sale.orderNumber}${cust ? ' - ' + cust.name : ''}`,
+          category: 'sales',
+          productId: sale.lineItems?.[0]?.productId || null,
+        });
+        // Update customer totalSpent and orderCount
+        if (cust) {
+          await customers.updateCustomer(cust.id, {
+            totalSpent: (cust.totalSpent || 0) + (sale.total || 0),
+            orderCount: (cust.orderCount || 0) + 1,
+          });
+        }
+      } catch (e) { console.warn('Transaction/customer update failed:', e); }
+      renderSalesPage();
+      renderCustomersPage();
+      toast(`${sale.orderNumber} marked paid`, 'success');
+      break;
+    }
+
+    case 'cancel-sale': {
+      const sale = sales.getSaleById(id);
+      if (!sale || !confirm(`Cancel order ${sale.orderNumber}?`)) break;
+      await sales.cancelSale(id);
+      renderSalesPage();
+      toast(`${sale.orderNumber} cancelled`, 'info');
+      break;
+    }
+
+    case 'delete-sale': {
+      const sale = sales.getSaleById(id);
+      if (!sale || !confirm(`Delete order ${sale.orderNumber}?`)) break;
+      await sales.deleteSale(id);
+      if (selectedSaleId === id) selectedSaleId = null;
+      renderSalesPage();
+      toast('Order deleted', 'info');
+      break;
+    }
   }
 }
 
@@ -2159,6 +2411,236 @@ async function handleMainClick(e) {
 
 let _qbStatus = null;
 let _qbReport = null;
+
+// ── Customers Page ──────────────────────────────────
+
+let customerSearch = '';
+let selectedCustomerId = null;
+
+function renderCustomersPage() {
+  const el = document.getElementById('page-customers');
+  if (!el) return;
+  const filtered = customers.filterCustomers({ search: customerSearch });
+
+  let html = `
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <input class="search-input" id="customer-search" type="text" placeholder="Search customers..." value="${escHtml(customerSearch)}" />
+        <span style="color:var(--text-muted);font-size:0.85rem;">${filtered.length} customer${filtered.length !== 1 ? 's' : ''}</span>
+      </div>
+      <button class="btn-primary" data-action="add-customer">+ Add Customer</button>
+    </div>
+  `;
+
+  if (selectedCustomerId) {
+    const cust = customers.getCustomerById(selectedCustomerId);
+    if (cust) {
+      const custOrders = sales.getAllSales().filter(o => o.customerId === cust.id);
+      html += `
+        <div class="sale-detail" style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+            <div>
+              <h3 style="margin:0;color:var(--text);">${escHtml(cust.name)}</h3>
+              ${cust.company ? `<div style="color:var(--text-muted);font-size:0.85rem;">${escHtml(cust.company)}</div>` : ''}
+            </div>
+            <button class="btn-secondary" data-action="close-customer-detail" style="font-size:0.78rem;">Close</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px;">
+            ${cust.email ? `<div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Email</div><div style="font-size:0.88rem;color:var(--text);">${escHtml(cust.email)}</div></div>` : ''}
+            ${cust.phone ? `<div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Phone</div><div style="font-size:0.88rem;color:var(--text);">${escHtml(cust.phone)}</div></div>` : ''}
+            ${cust.address ? `<div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Address</div><div style="font-size:0.88rem;color:var(--text);">${escHtml(cust.address)}</div></div>` : ''}
+            <div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Total Spent</div><div style="font-size:0.88rem;color:var(--accent);">$${(cust.totalSpent || 0).toFixed(2)}</div></div>
+            <div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Orders</div><div style="font-size:0.88rem;color:var(--text);">${cust.orderCount || 0}</div></div>
+          </div>
+          ${cust.notes ? `<div style="font-size:0.82rem;color:var(--text-muted);font-style:italic;margin-bottom:12px;">${escHtml(cust.notes)}</div>` : ''}
+          <div class="sale-actions">
+            <button class="btn-secondary" data-action="edit-customer" data-id="${cust.id}">Edit</button>
+            <button class="btn-secondary" data-action="delete-customer" data-id="${cust.id}" style="color:var(--danger);border-color:var(--danger);">Delete</button>
+          </div>
+          ${custOrders.length ? `
+            <div style="margin-top:16px;">
+              <h4 style="margin:0 0 8px;font-size:0.85rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Orders</h4>
+              <div class="sales-list">
+                ${custOrders.map(o => {
+                  const badge = sales.getSaleStatusBadge(o.status);
+                  return `<div class="sale-row" data-action="view-sale" data-id="${o.id}">
+                    <div><div class="sale-number">${escHtml(o.orderNumber)}</div><div class="sale-customer">${new Date(o.createdAt).toLocaleDateString()}</div></div>
+                    <div style="display:flex;align-items:center;gap:12px;">
+                      <span class="sale-status ${badge.cls}">${badge.label}</span>
+                      <span class="sale-total">$${(o.total || 0).toFixed(2)}</span>
+                    </div>
+                  </div>`;
+                }).join('')}
+              </div>
+            </div>
+          ` : '<div style="margin-top:12px;font-size:0.82rem;color:var(--text-muted);">No orders yet for this customer.</div>'}
+        </div>
+      `;
+    }
+  }
+
+  if (!filtered.length) {
+    html += `<div class="empty"><div class="empty-icon">--</div><p>No customers yet. Add customers to create sales orders.</p></div>`;
+  } else {
+    html += '<div class="customer-grid">';
+    for (const c of filtered) {
+      html += `
+        <div class="customer-card" data-action="view-customer" data-id="${c.id}">
+          <div class="customer-name">${escHtml(c.name)}</div>
+          ${c.company ? `<div class="customer-company">${escHtml(c.company)}</div>` : ''}
+          ${c.email ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:4px;">${escHtml(c.email)}</div>` : ''}
+          <div class="customer-stats">
+            <span>$${(c.totalSpent || 0).toFixed(2)} spent</span>
+            <span>${c.orderCount || 0} order${(c.orderCount || 0) !== 1 ? 's' : ''}</span>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:10px;">
+            <button class="toggle-btn" data-action="edit-customer" data-id="${c.id}">Edit</button>
+            <button class="btn-delete" data-action="delete-customer" data-id="${c.id}" title="Remove">x</button>
+          </div>
+        </div>`;
+    }
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+
+  // Re-bind customer search
+  document.getElementById('customer-search')?.addEventListener('input', e => {
+    customerSearch = e.target.value.trim();
+    renderCustomersPage();
+  });
+}
+
+// ── Sales Page ──────────────────────────────────────
+
+let salesFilter = 'all';
+let selectedSaleId = null;
+
+function renderSalesPage() {
+  const el = document.getElementById('page-sales');
+  if (!el) return;
+  const allSales = salesFilter === 'all' ? sales.getAllSales() : sales.getSalesByStatus(salesFilter);
+  const stats = sales.getSalesStats();
+  const allCustomers = customers.getAllCustomers();
+
+  let html = `
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <button class="filter-btn ${salesFilter === 'all' ? 'active' : ''}" data-sfilter="all">All</button>
+        <button class="filter-btn ${salesFilter === 'draft' ? 'active' : ''}" data-sfilter="draft">Draft</button>
+        <button class="filter-btn ${salesFilter === 'confirmed' ? 'active' : ''}" data-sfilter="confirmed">Confirmed</button>
+        <button class="filter-btn ${salesFilter === 'shipped' ? 'active' : ''}" data-sfilter="shipped">Shipped</button>
+        <button class="filter-btn ${salesFilter === 'paid' ? 'active' : ''}" data-sfilter="paid">Paid</button>
+      </div>
+      <button class="btn-primary" data-action="create-sale">+ New Order</button>
+    </div>
+
+    <div class="cost-summary-row" style="margin-bottom:20px;">
+      <div class="cost-summary-card">
+        <div class="cost-summary-value">${stats.total}</div>
+        <div class="cost-summary-label">Total Orders</div>
+      </div>
+      <div class="cost-summary-card">
+        <div class="cost-summary-value">${stats.pending}</div>
+        <div class="cost-summary-label">Pending</div>
+      </div>
+      <div class="cost-summary-card">
+        <div class="cost-summary-value">${stats.shipped}</div>
+        <div class="cost-summary-label">Shipped</div>
+      </div>
+      <div class="cost-summary-card">
+        <div class="cost-summary-value">$${stats.revenue.toFixed(2)}</div>
+        <div class="cost-summary-label">Revenue (Paid)</div>
+      </div>
+    </div>
+  `;
+
+  // Sale detail view
+  if (selectedSaleId) {
+    const sale = sales.getSaleById(selectedSaleId);
+    if (sale) {
+      const cust = sale.customerId ? customers.getCustomerById(sale.customerId) : null;
+      const badge = sales.getSaleStatusBadge(sale.status);
+      html += `
+        <div class="sale-detail" style="margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;">
+            <div>
+              <h3 style="margin:0;color:var(--text);">${escHtml(sale.orderNumber)} <span class="sale-status ${badge.cls}" style="vertical-align:middle;margin-left:8px;">${badge.label}</span></h3>
+              ${cust ? `<div style="color:var(--text-muted);font-size:0.85rem;margin-top:4px;">Customer: ${escHtml(cust.name)}</div>` : ''}
+            </div>
+            <button class="btn-secondary" data-action="close-sale-detail" style="font-size:0.78rem;">Close</button>
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
+            <div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Subtotal</div><div style="font-size:0.88rem;color:var(--text);">$${(sale.subtotal || 0).toFixed(2)}</div></div>
+            <div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Tax</div><div style="font-size:0.88rem;color:var(--text);">$${(sale.tax || 0).toFixed(2)}</div></div>
+            <div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Shipping</div><div style="font-size:0.88rem;color:var(--text);">$${(sale.shippingCost || 0).toFixed(2)}</div></div>
+            <div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Total</div><div style="font-size:1rem;color:var(--accent);font-weight:600;">$${(sale.total || 0).toFixed(2)}</div></div>
+            <div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Created</div><div style="font-size:0.88rem;color:var(--text);">${new Date(sale.createdAt).toLocaleDateString()}</div></div>
+            ${sale.shippedAt ? `<div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Shipped</div><div style="font-size:0.88rem;color:var(--text);">${new Date(sale.shippedAt).toLocaleDateString()}</div></div>` : ''}
+            ${sale.deliveredAt ? `<div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Delivered</div><div style="font-size:0.88rem;color:var(--text);">${new Date(sale.deliveredAt).toLocaleDateString()}</div></div>` : ''}
+            ${sale.paidAt ? `<div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Paid</div><div style="font-size:0.88rem;color:var(--text);">${new Date(sale.paidAt).toLocaleDateString()}</div></div>` : ''}
+            ${sale.trackingNumber ? `<div><div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;">Tracking</div><div style="font-size:0.88rem;color:var(--text);">${escHtml(sale.trackingNumber)}</div></div>` : ''}
+          </div>
+          ${sale.lineItems && sale.lineItems.length ? `
+            <div style="margin-bottom:12px;">
+              <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Line Items</div>
+              ${sale.lineItems.map(li => {
+                const prod = products.getProductById(li.productId);
+                return `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:0.85rem;">
+                  <span style="color:var(--text);">${prod ? escHtml(prod.name) : (li.description || 'Item')}</span>
+                  <span style="color:var(--text-muted);">${li.quantity} x $${(li.unitPrice || 0).toFixed(2)} = $${((li.quantity || 0) * (li.unitPrice || 0)).toFixed(2)}</span>
+                </div>`;
+              }).join('')}
+            </div>
+          ` : ''}
+          ${sale.notes ? `<div style="font-size:0.82rem;color:var(--text-muted);font-style:italic;margin-bottom:12px;">${escHtml(sale.notes)}</div>` : ''}
+          ${sale.shippingAddress ? `<div style="font-size:0.82rem;color:var(--text-muted);margin-bottom:12px;">Ship to: ${escHtml(sale.shippingAddress)}</div>` : ''}
+          <div class="sale-actions">
+            ${sale.status === 'draft' ? `<button class="btn-primary" data-action="confirm-sale" data-id="${sale.id}" style="font-size:0.82rem;">Confirm</button>` : ''}
+            ${sale.status === 'confirmed' ? `<button class="btn-primary" data-action="ship-sale" data-id="${sale.id}" style="font-size:0.82rem;">Ship</button>` : ''}
+            ${sale.status === 'shipped' ? `<button class="btn-primary" data-action="deliver-sale" data-id="${sale.id}" style="font-size:0.82rem;">Mark Delivered</button>` : ''}
+            ${sale.status === 'delivered' ? `<button class="btn-primary" data-action="mark-sale-paid" data-id="${sale.id}" style="font-size:0.82rem;">Mark Paid</button>` : ''}
+            ${!['paid', 'cancelled'].includes(sale.status) ? `<button class="btn-secondary" data-action="cancel-sale" data-id="${sale.id}" style="color:var(--danger);border-color:var(--danger);font-size:0.82rem;">Cancel</button>` : ''}
+            ${['draft', 'cancelled'].includes(sale.status) ? `<button class="btn-secondary" data-action="delete-sale" data-id="${sale.id}" style="color:var(--danger);border-color:var(--danger);font-size:0.82rem;">Delete</button>` : ''}
+          </div>
+        </div>
+      `;
+    }
+  }
+
+  if (!allSales.length) {
+    html += `<div class="empty"><div class="empty-icon">--</div><p>No sales orders${salesFilter !== 'all' ? ' with this status' : ''}. Create a new order to start tracking sales.</p></div>`;
+  } else {
+    html += '<div class="sales-list">';
+    for (const o of allSales) {
+      const cust = o.customerId ? customers.getCustomerById(o.customerId) : null;
+      const badge = sales.getSaleStatusBadge(o.status);
+      const date = new Date(o.createdAt).toLocaleDateString();
+      html += `
+        <div class="sale-row" data-action="view-sale" data-id="${o.id}">
+          <div>
+            <div class="sale-number">${escHtml(o.orderNumber)}</div>
+            <div class="sale-customer">${cust ? escHtml(cust.name) : 'No customer'} &middot; ${date}</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <span class="sale-status ${badge.cls}">${badge.label}</span>
+            <span class="sale-total">$${(o.total || 0).toFixed(2)}</span>
+          </div>
+        </div>`;
+    }
+    html += '</div>';
+  }
+
+  el.innerHTML = html;
+
+  // Bind sales filter buttons
+  el.querySelectorAll('[data-sfilter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      salesFilter = btn.dataset.sfilter;
+      renderSalesPage();
+    });
+  });
+}
 
 // ── Legal Pages ─────────────────────────────────────
 

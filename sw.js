@@ -1,6 +1,6 @@
 // ── Service Worker — Cache-First Offline PWA ─────────
 
-const CACHE_NAME = 'inv-platform-v9';
+const CACHE_NAME = 'inv-platform-v10';
 const ASSETS = [
   '/',
   '/index.html',
@@ -37,6 +37,8 @@ const ASSETS = [
   '/js/supabase.js',
   '/js/api-client.js',
   '/js/ui/pricing.js',
+  '/js/stores/customers.js',
+  '/js/stores/sales.js',
   '/manifest.json',
 ];
 

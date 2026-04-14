@@ -28,6 +28,9 @@ const TABLE_MAP = {
   settings: 'settings',
   photos: 'photos',
   businesses: 'businesses',
+  customers: 'customers',
+  sales: 'sales_orders',
+  salesOrders: 'sales_orders',
 };
 
 // camelCase → snake_case field mapping per store
@@ -46,6 +49,9 @@ const FIELD_MAPS = {
   history: { itemType: 'item_type', itemId: 'item_id', itemName: 'item_name', changeType: 'change_type', quantityChange: 'quantity_change', newQuantity: 'new_quantity', locationId: 'location_id', createdAt: 'created_at' },
   expenses: { costType: 'cost_type', variableBasis: 'variable_basis', variableRate: 'variable_rate', linkedProductId: 'linked_product_id', createdAt: 'created_at', updatedAt: 'updated_at' },
   transactions: { productId: 'product_id', externalId: 'external_id', createdAt: 'created_at', updatedAt: 'updated_at' },
+  customers: { totalSpent: 'total_spent', orderCount: 'order_count', createdAt: 'created_at', updatedAt: 'updated_at' },
+  sales: { orderNumber: 'order_number', customerId: 'customer_id', lineItems: 'line_items', shippingCost: 'shipping_cost', shippingAddress: 'shipping_address', trackingNumber: 'tracking_number', paidAt: 'paid_at', shippedAt: 'shipped_at', deliveredAt: 'delivered_at', createdAt: 'created_at', updatedAt: 'updated_at' },
+  salesOrders: { orderNumber: 'order_number', customerId: 'customer_id', lineItems: 'line_items', shippingCost: 'shipping_cost', shippingAddress: 'shipping_address', trackingNumber: 'tracking_number', paidAt: 'paid_at', shippedAt: 'shipped_at', deliveredAt: 'delivered_at', createdAt: 'created_at', updatedAt: 'updated_at' },
 };
 
 // Convert camelCase record to snake_case for Postgres
